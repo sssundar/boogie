@@ -1,0 +1,18 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2016-07-01T19:18:36-07:00
+
+====== Home ======
+Created Friday 01 July 2016
+
+This is the notebook for revision A of the Android boogie board for Thatha. The goal is to make an Android app he can use on a Nexus 7 (2013) tablet that is very simple for him and which is tailored to how he uses electronics - i.e. insensitive to random presses on parts of the screen he doesn't mean to touch. The idea is to allow him to send his Boogie Board doodles to Amma when she calls, so they can have a conversation (he can no longer talk well because of hearing problems). 
+
+The point in Revision A is to get the ball rolling. It's a 48-72 hour sprint specifically to understand how fast the display must be sampled and shared to get a useable product, and to pin down how much custom dev I need to do (my own server? socket communications? Google Hangouts API? Skype API? paid apps like ScreenMeet and a free doodler?) to make an app that is dead simple for Thatha to use (max 3 clicks - who, clear screen, and exit) and usable by Amma. 
+
+Right now, I'm not worrying about Android home buttons, which Thatha will certainly accidentally press. I'm also not worrying about resolution and such. I've thought about it, and I'm sure a commercial option exists between ScreenMeet & a doodling app that with training Thatha can use - so I have a limited time to make something tailored in UI to him, and if I can't get it working fast enough or the speed isn't working out on my own, then I ditch this and focus on GETTING IT WORKING for him. The functionality is more important than monthly fees or ease of use. Worst case Patti can help him set up calls. This is obviously not the ideal situation.. so:
+
+Milestones are, in order, for this revision:
+1. Get a hangouts session going, ignoring the display/doodle completely. Test effect of size & frequency on ordering & latency for programmatic messages. 
+	a. The idea being for a black-white doodle, I can do a simple run-length encoding and send a text message via Hangouts, taking advantage of Google's servers and security to send the doodle during a voice call.
+2. Add a simple doodle app with run-length encoding and see it reconstructed on the other end - what resolution is appropriate? Are better encodings' time/space tradeoffs worth it? Are diff-updates effective given ordering shuffles?
+3. TBD
