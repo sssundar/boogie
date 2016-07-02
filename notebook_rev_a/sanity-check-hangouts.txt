@@ -1,0 +1,70 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2016-07-01T19:36:35-07:00
+
+====== sanity-check-hangouts ======
+Created Friday 01 July 2016
+
+**Get a hangouts session going, ignoring the display/doodle completely. Test effect of size & frequency on ordering & latency for programmatic messages.** 
+
+From the Hangouts reference on "Writing Apps": //You can store approximately 1MB of data in the shared state object; each delta can be about 10K each. //Elsewhere they state that programattic delta updates can be at maximum 10 per second, with a suspension of 1 second if you exceed that. Expect 300 ms latency. 
+
+So we have 10k, 10Hz to play with with a 300 ms delay. Assume 5Hz, 10k deltas. Allowing 10kBytes, and say in each byte we pack [0-128|bw] for a run, then we see we can take a 1080x1920 = 2,073,600 pixel image with many runs and at best turn it into 16,200 bytes. Not good enough. So we have a limited drawing area, or we use a coarser grid. Say, full screen but 1/4 resolution, which turns into 4050 bytes per delta. and even then, the deltas can be diffs, so even better. We'll start with full-updates, though, at 1/4 resolution and compression, expansion on either end.
+
+The app itself can for now be a Hangouts app run from within Hangouts. I guess the Hangouts API isn't yet allowing other apps to call it.
+
+What I'm seeing on a closer look is that it's not so straightforward to do it this way. 
+	Skype has an API documentation that is hard for me to understand
+	Hangouts allows internal apps only and I don't find it so simple to set up either
+	
+Seems to me my best bet for a quick setup is a quick and dirty Python web server with whitelisted inputs from post, which delivers content via GET requests with Javascript to refresh the page. As a first test, I mean. I can run the server on an old laptop or Pi 2 later. For now it'll get me off the ground with this. 
+
+**Ok, so the idea now is: **
+1) Set up a HTTP web server in Python with a randomly generated BMP displayed at the index page, and refresh with Javascript.
+2) Set up a POST form (hidden) and send coded text for decoding (with a whitelist and parsing at the server end) to demo error handling and 
+3) Write a simple drawing app for Android and post periodically to the web server. View it on a browser on my laptop and see resolution, timing, etc.
+
+I don't think there are too many security issues here so long as I filter the form input and have only these two interfaces - get and post, without additional parameters or scripts.
+
+Ok, onto (1).
+
+**Set up a HTTP web server in Python using Cherry Py that is publically visible with a domain mapping, which displays "Hello World."**
+
+[*] Installed CherryPy using pip for Python 2.7 using sudo
+[*] Found how to change socket mappings so CherryPy servers are publically visible
+[*] Wrote Hello World script in Python on port 8080 allowing public connections
+[*] Viewed webpage using my phone but only with local IP (192.168.1.5:8080)
+	[x] Unable to view webpage using public IP because router apparently can't rewrite internal requests using the external IP
+	[x] Unable to view webpage using public IP DNS lookup on Athimber's computer (different router)
+	[ ] Can also try Patti's 3G connection on her table (no need, see below)
+[*] Set up DuckDNS auto-updater on my Linux computer.
+	[ ] Need to check if this works after a reboot (Not Done)
+	[*] Not anymore - see below.
+[*] Attempting to set up a simple HTTP web server in the cloud so that I don't have to worry about port forwarding on routers I don't own
+	[*] Amazon AWS will cost ~100-220 a year depending on how far in advance I pay. 
+	[*] It makes no sense in the long term. I can set up a server on my Pi and leave it running, and figure out port forwarding later.
+	[*] But for now, it makes sense, even paid. I can use the free tier easily though for testing.
+	[*] Created free-tier EC2 instance with SSH, HTTP, and HTTPS ports open, running Ubuntu 14.04 server LTS with limited storage. 
+	[*] Downloaded .pem file for SSH but will not be syncing to Github, obviously.
+	[*] https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstancesLinux.html
+	[*] Instance is running in N. California
+		[*] DNS ec2-54-67-127-196.us-west-1.compute.amazonaws.com
+		[*] ID i-1c115ca9
+		[*] to SSH in, from the boogie security folder
+			[*] ssh -i boogie-rev-a-1.pem ubuntu[[@ec2-54-67-127-196.us-west-1.compute.amazonaws.com]]
+		[*] Success in SSH
+		[*] sudo apt-get update & sudo apt-get install python-pip & pip install cherrypy and we're ready to start!
+		[*] Use SCP for file transfer to home directory (~), from the boogie security folder
+			[*] scp -i boogie-rev-a-1.pem [[../boogie/src/helloworld.py]] ubuntu[[@ec2-54-67-127-196.us-west-1.compute.amazonaws.com]]:~
+		[*] Set up CherryPy and the Hello World code on HTTP (port 80), making sure to use sudo python .. for root priviledges to bind port 80
+			[*] Works!! I can access the public IP (DNS) and see Hello World.
+			[*] Let's push to Github to preserve this data. Also, let's back up the .pem file somewhere safe.
+
+
+ **Now, set up a HTTP web server in Python with a randomly generated BMP displayed at the index page, and refresh with Javascript.**
+
+
+
+
+
+

@@ -1,0 +1,21 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2016-07-01T21:32:20-07:00
+
+====== References ======
+Created Friday 01 July 2016
+
+1. http://android-developers.blogspot.in/2013/06/adding-backend-to-your-app-in-android.html
+2. http://www.androidhive.info/2014/10/android-building-group-chat-app-using-sockets-part-1/
+3. http://android-developers.blogspot.in/2013/06/adding-backend-to-your-app-in-android.html
+4. https://github.com/codepath/android_guides/wiki/Sending-and-Receiving-Data-with-Sockets
+5. https://developers.google.com/+/hangouts/getting-started
+6. https://github.com/OfficeDev/skype-android-app-sdk-samples/blob/master/HealthcareApp/app/src/main/java/com/microsoft/office/sfb/healthcare/SkypeCall.java
+7. 5 open source drawing applications fror Android - opensource.com
+8. stackoverflow how to send data to a web server from android
+9. http://docs.cherrypy.org/en/latest/tutorials.html
+10. aosabook.org 500 Lines or Less, A Simple Web Server
+11. http://stackoverflow.com/questions/7494171/python-cherrypy-web-app-deployed-locally-but-not-visible-over-intranet
+12. http://superuser.com/questions/260014/access-internal-ip-using-public-ip
+13. http://www.smallnetbuilder.com/other/cloud/cloud-services-apps/128-how-to-set-up-a-cloud-webserver-on-amazon-web-services
+14. http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html
