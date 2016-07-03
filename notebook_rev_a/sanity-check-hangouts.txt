@@ -62,16 +62,24 @@ Ok, onto (1).
 
 //Note, if I search for files or html documents that aren't there (e.g. index.html) CherryPy dumps traceback to the user. Not great.//
 
-**Set up a HTTP web server in Python with a programatically generated BMP (or a pixel snake) posted to and displayed at the index page, and refresh with JavaScript on the laptop to view. Set up a POST form (hidden) and send coded text for decoding (with a whitelist and parsing at the server end) to demo error handling, and display the bitmap suggested.**
+**Set up a HTTP web server in Python with a programatically generated image (of a pixel snake) posted to and displayed at the index page, and refresh with JavaScript on the laptop to view. Set up a POST form (hidden) and send coded text for decoding (with a whitelist and parsing at the server end) to demo error handling, and display the bitmap suggested.**
 
 Here's the idea. 
 
-[ ] On the laptop, write a Python script that generates a bw array (bitmap) with a snake going from top left to bottom right, updating once every 200 ms (parametric). 
-[ ] Save this as a bitmap and see the evolution to make sure it's what you want
-[ ] Encode this naively (run length, full, not diff) and decode it to verify the enc/dec scripts locally.
-[ ] Set up the webserver so that it has a hidden post & get form with internal decoding, and so that it displays the bitmap on the index. Include whitelists and error handling.
+[*] On the laptop, write a Python script that generates a pixels nake going from top left to bottom right, updating once every 200 ms (parametric size, frequency). 
+	[*] See src/image_size_tests.py 
+	[*] A 200x200 grid as a PNG zoomed to 300% is 5.7kB and looks like it could handle handwriting. Then again, a normal display now is 1080x1920, so that's 1/5 x 1/10 of the size of the screen, or almost 1/50 of the resolution allowed by the screen. We'll have to play and see. But 5.7kB is reaching a fairly large size. Remember, with 10k images we're expecting about 5.5 hours of talk time for a 2 Gb data outbound to Amma's phone - well beyond her limit unless she's on WiFi (likely).
+	[*] Notice at 5Hz this leads to about 240kbits per second required upload speed. That's pretty reasonable nowadays in America. What about India? Not sure. Let's try it.
+	[*] P.S. 5Hz means my hard disk drive can't keep up with it - I see updates about once a second. Makes sense.
+	[*] I feel this resolution/update frequency aren't going to be good enough. I think I'll need slower & larger. Problem is, Thatha tends to erase his board a LOT, and write quickly. Hm. 
+	[*] Ok, let's see what the size is with text RLE, why not.
+		[*] Well, with random images (worst case) RLE turns out to be 20kB on average. So that's unfortunate, because PNGs can represent this in 5.7kB. Presumably for other situations RLE does a lot better. We should try it on an image of handwritten text.
+		[*] For instance, a random image PNG is 5.7k but a 200x200 written "Hi!" in BW is only 906 bytes. So even RLE will be ok here, I think. Let's try it.
+		[*] Yep, the PNG is 906 bytes, and the RLE is 514 bytes. The difference isn't too much, but it shows handwriting isn't so bad as we thought, and we can play with a few types of compression algorithms! Of course, the tradeoff is between space/time. There are usually hardware compression/decompression algorithms for PNG deflate. The RLE needs to be done in SW so it'll be way slower most likely.
+[ ] Set up the webserver so that it has a hidden post & get form with internal decoding, and so that it displays the png on the index. Keep things static for now.
+	[ ] http://docs.cherrypy.org/en/latest/tutorials.html#tutorial-1-a-basic-web-application
 [ ] Use python's equivalent of wget for post to programattically post the snake and watch it evolve, to see what frame skipping, etc. look like. Play with update frequencies, resolution (encoding size). See what Amazon's usage statistics look like just for kicks.
-
+[ ] Deadline:** July 3nd afternoon**
 [ ] Work on a basic design for the doodle app - e.g. just drawing. No Skype. 
 [ ] Deadline:** July 3nd evening**
 [ ] Add in VoIP demo to me alone.
@@ -82,12 +90,14 @@ Here's the idea.
 [ ] Observe and make notes on Thatha's usage patterns 
 [ ] Deadline: **July 6th evening**
 
-[ ] Aesthetics - usability - home buttons, see how Thatha uses the tablet, make it easier for his use.
+[ ] Aesthetics - usability - home buttons, see how Thatha uses the tablet, make it easier for his use. How to avoid recognizing his hand pressure as a press in the doodle? Look for open-source doodle code with APIs if possible to grab the screen..
 [ ] Remote control of Tablet - Remote Update of App - App without Developer Mode
+[ ] Flashing light to say "sent" so Thatha knows when he can clear - and send before clear so it's on record. Allow scrolling of saved sessions in real time so Amma can review notes.
 [ ] Add in VoIP to Amma, Balu mama, Vikram, Suman, ... 
 [ ] Make VoIP optional in case of low bandwidth
 [ ] Add save-session features for client app?
 [ ] Webserver security & authentication
+	[ ] Size limits on post data
 [ ] Cleanup last file so no local data exists on server.
 [ ] Look into RPi2 webserver hosting & port forwarding, and network monitoring for security. 
 
