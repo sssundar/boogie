@@ -11,7 +11,7 @@ from time import sleep
 import pylab as pl
 import matplotlib.cm as cm
 import numpy as np
-import Image, random
+import random
 
 if __name__ == "__main__":
 	N = 200

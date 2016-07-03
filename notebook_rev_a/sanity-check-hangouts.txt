@@ -77,14 +77,33 @@ Here's the idea.
 		[*] For instance, a random image PNG is 5.7k but a 200x200 written "Hi!" in BW is only 906 bytes. So even RLE will be ok here, I think. Let's try it.
 		[*] Yep, the PNG is 906 bytes, and the RLE is 514 bytes. The difference isn't too much, but it shows handwriting isn't so bad as we thought, and we can play with a few types of compression algorithms! Of course, the tradeoff is between space/time. There are usually hardware compression/decompression algorithms for PNG deflate. The RLE needs to be done in SW so it'll be way slower most likely.
 [ ] Set up the webserver so that it has a hidden post & get form with internal decoding, and so that it displays the png on the index. Keep things static for now.
-	[ ] http://docs.cherrypy.org/en/latest/tutorials.html#tutorial-1-a-basic-web-application
+	[*] http://docs.cherrypy.org/en/latest/tutorials.html#tutorial-1-a-basic-web-application
+	[*] Well, I don't quite like the idea of POSTing files, as it seems annoying to do programmatically with a form submission. I know it's possible, but for now let's stick with RLE encoding/decoding. 
+	[*] Ok, so I'll use put, get and have python scripts on either side updating and saving files to disk. One will put a sequence of handwritten '1,2,3,4,5' in sequence, RLE of course, and the other will parse it right back out on the server side, converting it to an image that is displayed. The page should refresh via html or javascript. 
+	[*] So screw the RESTful API. Let's just use one function to take a text argument, and another to deliver an image to the screen.
+	[*] I did find a reference for how to stream files byte by byte to disk on the server side. That might be more useful later.
+	[*] Ok, lets assume a text string RLE encoded with bytes of the form 0-128 | bw, b = 0, w = 1. Then using sys.byteorder in Python to confirm both my laptop & the EC2 instance are little endian, which I guess doesn't matter for single characters..
+	[*] Now: setting up webserver.
+		[*] Made a ~/public/images directory and placed the barebones.py CherryPy script in [[~/]] as well for local testing
+		[*] Without the response header saying it's text, I'm seeing 0.2 second refresh and HTML as expected
+		[*] With a picture in the public/images folder, I see the image. It flickers annoyingly. Something will have to be done in the app probably.
+		[*] Now, setting it up on EC2.. works as expected.
+			[*] Had to install PIL as Pillow
 [ ] Use python's equivalent of wget for post to programattically post the snake and watch it evolve, to see what frame skipping, etc. look like. Play with update frequencies, resolution (encoding size). See what Amazon's usage statistics look like just for kicks.
-[ ] Deadline:** July 3nd afternoon**
+	[*] Actually, playing with 0-5 instead of snake. Just want to see updates, skipping.
+	[*] Always test locally first.. easier.
+	[*] Encoding the run lengths as a 0x00-0xFF was a bad idea. Some of those aren't valid unicode characters. So I should do this: double the size to about 1kB for this, have the first character be the first color ('b' or 'w') and we know it toggles after that. Therefore the rest can just be the 0xXX encoding.
+	[*] This did it. I definitely get skipping in EC2 with 200 ms POSTs. If I slow it to 2 second updates, there's no skipping. 
+	[*] Deadline:** July 3rd afternoon.**
 [ ] Work on a basic design for the doodle app - e.g. just drawing. No Skype. 
-[ ] Deadline:** July 3nd evening**
+[ ] Deadline:** July 4rd late morning (before noon)**
+
+[ ] Don't know what this does to size of the message. Need to check Amazon EC2 usage, and can also store logs of this sort of information on the server - timing between observed requests, and classification of the requests to see if even the server sees loss or overlap or other weird timing.
+[ ] Putting unique indexes (large, large wrapping #) on these messages may help order them so they can be displayed well despite the slow update. I can also have talkback so the app knows if its message has been received by Amma.
+
 [ ] Add in VoIP demo to me alone.
 [ ] Test paid options like ScreenMeet with a doodle app to see how much better things can get
-[ ] Deadline:** July 4rd evening**
+[ ] Deadline:** July 5th morning**
 
 [ ] Demo to Thatha with me, first, then Amma (web-only + actual phone, or Video Conference so he can see she can see).
 [ ] Observe and make notes on Thatha's usage patterns 
@@ -98,6 +117,7 @@ Here's the idea.
 [ ] Add save-session features for client app?
 [ ] Webserver security & authentication
 	[ ] Size limits on post data
+	[ ] Post, not put, as otherwise RLE images stored in browser..
 [ ] Cleanup last file so no local data exists on server.
 [ ] Look into RPi2 webserver hosting & port forwarding, and network monitoring for security. 
 

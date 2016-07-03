@@ -19,3 +19,8 @@ Created Friday 01 July 2016
 12. http://superuser.com/questions/260014/access-internal-ip-using-public-ip
 13. http://www.smallnetbuilder.com/other/cloud/cloud-services-apps/128-how-to-set-up-a-cloud-webserver-on-amazon-web-services
 14. http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html
+15. http://www.codicode.com/art/upload_files_from_android_to_a_w.aspx
+16. http://stackoverflow.com/questions/26576349/streaming-post-a-large-file-to-cherrypy-by-python-client
+17. https://docs.python.org/2/library/struct.html for checking endianness and RLE decoding
+18. http://askubuntu.com/questions/507459/pil-install-in-ubuntu-14-04-1-lts
+19. http://stackoverflow.com/questions/32550181/how-to-receive-json-post-request-data-in-cherrypy-in-python-2-7
