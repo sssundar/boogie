@@ -20,9 +20,9 @@ What I'm seeing on a closer look is that it's not so straightforward to do it th
 Seems to me my best bet for a quick setup is a quick and dirty Python web server with whitelisted inputs from post, which delivers content via GET requests with Javascript to refresh the page. As a first test, I mean. I can run the server on an old laptop or Pi 2 later. For now it'll get me off the ground with this. 
 
 **Ok, so the idea now is: **
-1) Set up a HTTP web server in Python with a randomly generated BMP displayed at the index page, and refresh with Javascript.
-2) Set up a POST form (hidden) and send coded text for decoding (with a whitelist and parsing at the server end) to demo error handling and 
-3) Write a simple drawing app for Android and post periodically to the web server. View it on a browser on my laptop and see resolution, timing, etc.
+1) Set up a HTTP web server in Python with a programatically generated BMP (or a pixel snake) posted to and displayed at the index page, and refresh with JavaScript on the laptop to view
+	Set up a POST form (hidden) and send coded text for decoding (with a whitelist and parsing at the server end) to demo error handling, and display the bitmap suggested.
+2) Write a simple drawing app (post to website what is drawn, encoded, periodically). View it on a browser on my laptop and see resolution, timing, data usage, lag, etc.
 
 I don't think there are too many security issues here so long as I filter the form input and have only these two interfaces - get and post, without additional parameters or scripts.
 
@@ -60,8 +60,36 @@ Ok, onto (1).
 			[*] Works!! I can access the public IP (DNS) and see Hello World.
 			[*] Let's push to Github to preserve this data. Also, let's back up the .pem file somewhere safe.
 
+//Note, if I search for files or html documents that aren't there (e.g. index.html) CherryPy dumps traceback to the user. Not great.//
 
- **Now, set up a HTTP web server in Python with a randomly generated BMP displayed at the index page, and refresh with Javascript.**
+**Set up a HTTP web server in Python with a programatically generated BMP (or a pixel snake) posted to and displayed at the index page, and refresh with JavaScript on the laptop to view. Set up a POST form (hidden) and send coded text for decoding (with a whitelist and parsing at the server end) to demo error handling, and display the bitmap suggested.**
+
+Here's the idea. 
+
+[ ] On the laptop, write a Python script that generates a bw array (bitmap) with a snake going from top left to bottom right, updating once every 200 ms (parametric). 
+[ ] Save this as a bitmap and see the evolution to make sure it's what you want
+[ ] Encode this naively (run length, full, not diff) and decode it to verify the enc/dec scripts locally.
+[ ] Set up the webserver so that it has a hidden post & get form with internal decoding, and so that it displays the bitmap on the index. Include whitelists and error handling.
+[ ] Use python's equivalent of wget for post to programattically post the snake and watch it evolve, to see what frame skipping, etc. look like. Play with update frequencies, resolution (encoding size). See what Amazon's usage statistics look like just for kicks.
+
+[ ] Work on a basic design for the doodle app - e.g. just drawing. No Skype. 
+[ ] Deadline:** July 3nd evening**
+[ ] Add in VoIP demo to me alone.
+[ ] Test paid options like ScreenMeet with a doodle app to see how much better things can get
+[ ] Deadline:** July 4rd evening**
+
+[ ] Demo to Thatha with me, first, then Amma (web-only + actual phone, or Video Conference so he can see she can see).
+[ ] Observe and make notes on Thatha's usage patterns 
+[ ] Deadline: **July 6th evening**
+
+[ ] Aesthetics - usability - home buttons, see how Thatha uses the tablet, make it easier for his use.
+[ ] Remote control of Tablet - Remote Update of App - App without Developer Mode
+[ ] Add in VoIP to Amma, Balu mama, Vikram, Suman, ... 
+[ ] Make VoIP optional in case of low bandwidth
+[ ] Add save-session features for client app?
+[ ] Webserver security & authentication
+[ ] Cleanup last file so no local data exists on server.
+[ ] Look into RPi2 webserver hosting & port forwarding, and network monitoring for security. 
 
 
 
