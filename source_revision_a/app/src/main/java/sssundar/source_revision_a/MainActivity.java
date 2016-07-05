@@ -3,6 +3,7 @@ package sssundar.source_revision_a;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
@@ -18,6 +19,7 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.ArrayList;
+import android.text.TextUtils;
 
 public class MainActivity extends Activity implements OnClickListener {
 
@@ -70,16 +72,10 @@ public class MainActivity extends Activity implements OnClickListener {
                     try
                     {
                         Thread.sleep(1000);
-                        runOnUiThread(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                sampleScreen();
-                            }
-                        });
+                        sampleScreen();
+                    } catch (InterruptedException e) {
+                        Log.d("Boogie", "Encoding thread was interrupted");
                     }
-                    catch (InterruptedException e) {}
             }
 
             private void sampleScreen() {
@@ -108,7 +104,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     }
 
                     if (bmPixels[i] != raw_color) {
-                        rle.add(","+String.valueOf(count));
+                        rle.add(String.valueOf(count));
                         raw_color = bmPixels[i];
                         count = 0;
                     }
@@ -116,7 +112,10 @@ public class MainActivity extends Activity implements OnClickListener {
                     count += 1;
                 }
 
-                rle.add(","+String.valueOf(count));
+                rle.add(String.valueOf(count));
+                String csdata = TextUtils.join(",", rle);
+
+                Log.d("Boogie", "Length of RLE is " + String.valueOf(csdata.length()) + " characters");
 
                 // HTTP post this string to the Amazon EC2 webserver associated with this app
                 String url = "http://ec2-54-67-127-196.us-west-1.compute.amazonaws.com/";
@@ -132,7 +131,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
                         JSONObject data = new JSONObject();
                         try {
-                            data.put("run_length_encoding",rle);
+                            data.put("run_length_encoding",csdata);
                             try {
                                 OutputStream os = ec2.getOutputStream();
                                 os.write(data.toString().getBytes("UTF-8"));
@@ -141,6 +140,8 @@ public class MainActivity extends Activity implements OnClickListener {
                                 int HttpResult = ec2.getResponseCode();
                                 if (HttpResult == HttpURLConnection.HTTP_OK) {
                                     Log.d("Boogie", "RLE POST Successful!");
+                                } else {
+                                    Log.d("Boogie", "RLE POST Failed with Response Code: " + String.valueOf(HttpResult));
                                 }
                             } catch (IOException o) {
                                 Log.d("Boogie", "IO Exception!");

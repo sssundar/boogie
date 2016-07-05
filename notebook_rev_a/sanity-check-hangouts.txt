@@ -89,13 +89,13 @@ Here's the idea.
 		[*] With a picture in the public/images folder, I see the image. It flickers annoyingly. Something will have to be done in the app probably.
 		[*] Now, setting it up on EC2.. works as expected.
 			[*] Had to install PIL as Pillow
-[ ] Use python's equivalent of wget for post to programattically post the snake and watch it evolve, to see what frame skipping, etc. look like. Play with update frequencies, resolution (encoding size). See what Amazon's usage statistics look like just for kicks.
+[*] Use python's equivalent of wget for post to programattically post the snake and watch it evolve, to see what frame skipping, etc. look like. Play with update frequencies, resolution (encoding size). See what Amazon's usage statistics look like just for kicks.
 	[*] Actually, playing with 0-5 instead of snake. Just want to see updates, skipping.
 	[*] Always test locally first.. easier.
 	[*] Encoding the run lengths as a 0x00-0xFF was a bad idea. Some of those aren't valid unicode characters. So I should do this: double the size to about 1kB for this, have the first character be the first color ('b' or 'w') and we know it toggles after that. Therefore the rest can just be the 0xXX encoding.
 	[*] This did it. I definitely get skipping in EC2 with 200 ms POSTs. If I slow it to 2 second updates, there's no skipping. 
 	[*] Deadline:** July 3rd afternoon.**
-[ ] Work on a basic design for the doodle app - e.g. just drawing. No Skype. 
+[*] Work on a basic design for the doodle app - e.g. just drawing. No Skype. 
 	[*] Had to install a few extra (older) SDKs to Android Studio to get layout rendering to simulate
 	[*] Ok, followed steps more or less. 
 	[*] Gradle build time is obscene (>@ hours). Fixed by changing build-tools, SDK version.
@@ -103,12 +103,12 @@ Here's the idea.
 	[*] Laptop/Android Studio recognize Nexus 7 fine now. 
 	[*] Looks awesome. Some issues, noted below. Erasure works fine. 
 	[*] Added no autorotate. No screen erasure now except with back button & erase button. Can disable back button later.
-[ ] Let's now work on getting a bitmap RLE'd and sending out via HTTP post/put.
+[*] Let's now work on getting a bitmap RLE'd and sending out via HTTP post/put.
 	[ ] Bitmaps in Android have a built in PNG compression and downsampling function, so that's great. There are also ways to send PNGs via POST. Seems like it'd be worth trying RLE first, then defaulting to that. 
 	[*] Let's first set up a 1 second interrupt
 	[*] Downsample the bitmap immutably to 200x200, and compute the RLE in color,run,run,run format.
 	[*] Figure out HTTP post in Android
-	[*] Build, test it on the Nexus/Browser after spinning up the EC2 instance.
+	[*] Build, test it on the Nexus/Browser after spinning up the EC2 instance. Works!
 [ ] Work on a basic http get app for the receiver as well (build for my phone)
 [ ] Success on these is just.. get it working, fast. I want to see about resolution & bandwidth, lag, usability, clunkiness factor, ASAP.
 	[ ] Deadline:** July 5th evening**

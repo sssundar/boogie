@@ -40,3 +40,5 @@ Created Friday 01 July 2016
 33. http://stackoverflow.com/questions/5669501/how-to-get-rgb-values-of-bitmap-in-android
 34. http://stackoverflow.com/questions/21404252/post-request-send-json-data-java-httpurlconnection
 35. http://www.tutorialspoint.com/android/android_network_connection.htm
+36. http://www.androiddesignpatterns.com/2012/06/app-force-close-honeycomb-ics.html
+37. http://stackoverflow.com/questions/10850753/how-to-convert-a-liststring-into-a-comma-separated-string-without-iterating-li
