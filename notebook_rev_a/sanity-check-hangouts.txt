@@ -109,25 +109,51 @@ Here's the idea.
 	[*] Downsample the bitmap immutably to 200x200, and compute the RLE in color,run,run,run format.
 	[*] Figure out HTTP post in Android
 	[*] Build, test it on the Nexus/Browser after spinning up the EC2 instance. Works!
+	[*] Success on this is just.. get it working, fast. I want to see about resolution & bandwidth, lag, usability, clunkiness factor, ASAP.
 	[*] Deadline:** July 5th evening**
 [*] Ok, there is massive lag. At least 2 seconds, even with http-gets at 0.2seconds and http-post at 0.4 seconds. Looking at the network traffic on the Android monitor it's clear the processing is taking about 1 second on the tablet, so we have 1 second delay there, followed by 300 ms lag, followed by up to 0.2 seconds lag on our end on the browser, so duh it's taking 2-10 seconds to update. Not great. 
 
-[ ] Work on a basic http get app for the receiver as well (build for my phone)
-[ ] Success on these is just.. get it working, fast. I want to see about resolution & bandwidth, lag, usability, clunkiness factor, ASAP.
-	[ ] Deadline:** July 5th evening**
+[*] Based on what I've seen so far, if VoIP can handle 64kbps+ streaming **real time with <0.5s detectable delay**, I should be able to find a way to speed this up a lot and make it more reliable. This is the priority, because the rest of it - an app that receives data, handshakes, VoIP, speakers, these are solved problems. I can handle that later. 
+[*] Test paid options like ScreenMeet with a doodle app to see how much better things can get
+	[*] Several thoughts shown below, but VERY easy to use, and certainly cheaper than EC2 instance. Might be worth it. Should show Patti and see what she thinks of using it, and try to teach Thatha too.
 
-[ ] Add in VoIP demo to me alone.
-[ ] Test paid options like ScreenMeet with a doodle app to see how much better things can get
+[ ] Look into Latency with EC2 & India-US, look into delay calculations, variation
+	[ ] Internet connectivity checks periodically - how often does it "cut off?"
+	[ ] Maybe sending out data every 0.4s is overloading the server or typing up the file we're trying to display on the webserver index
+		[ ] Check if server post-complete-post overlap happening?
+	[ ] I need numbers on this
+		[ ] I need to have a log on the webserver to see how often post data is received, and flags to say whether there is overlap.
+		[ ] I should keep track of timestamps on the Android side (debug logs) as well, just to see how often it thinks it's sending out data
+			[ ] Don't ignore those errors in the logs..
+			[ ] What is the processing time?
+		[ ] A client app as well as a source/server would help us, too, as then the server wouldn't need to render a PNG on each POST, it could just send out the RLE encoding
+	[ ] Once we know where the lag/variable delay is coming from we can figure out how to stop it. If it's networking - diffs, use proper libraries, ... if it's processing, PNG, deflate, etc.
+[ ] Work on a basic http get app for the receiver as well (build for my phone)
+[ ] Add in VoIP demo to me alone
 [ ] Deadline:** July 6th evening**
 
 [ ] Demo to Thatha with me, first, then Amma (web-only + actual phone, or Video Conference so he can see she can see).
 [ ] Observe and make notes on Thatha's usage patterns 
 [ ] Deadline: **July 7th evening**
 
+
+[ ] Notes on ScreenMeet/doodle app
+	[ ] wow, that looked great, but it had up to 13 seconds delay from the tablet to the phone (i'm just assuming their servers are in USA, so it's a good estimate for my app too).
+	[ ] it's absolutely doing a diff of some kind, and they allow a speed/quality tradeoff - when just handwriting in a doodling app where most things stayed the same there was 1 second delay at most, and sometimes much less
+	[ ] I can do diffs really easy because I only have to deal with binary images - just subtract the old and new bitmap, and encode THAT, and handle clear separately
+	[ ] this only helps if processing is a negligible fraction of the time spend on this
+	[ ] I should absolutely test whether the server speeds up if it has to do less processing there itself - and hey, android can just separately deal with rendering, i could up my resolution a lot this way (another thing the screen share has on me is that it seems to have a larger transfer window - but I need to see what my 200x200 looks like scaled to the phone window..)
+	[ ] I also found a few sites saying I'm using the wrong libraries and it could be seriously slowing down my networking 
+		[ ] https://developer.android.com/training/articles/perf-tips.html#ObjectCreation
+		[ ] https://www.toptal.com/android/top-10-most-common-android-development-mistakes
+
 [ ] I think it'd be worth as a first pass putting in a "done" button so Thatha can tell Amma he's done writing, or at least to put in some kind of two way communication so he knows when she's seen what he's written. Maybe something as simple as a counter that resets every time there's a diff in the JSON string. 
 [ ] Ok, well, I should try out free/paid options to see what kind of lag they have, and see what DeadSimpleScreenSharing lag is, and then look into ways of speeding this up. I mean, clearly, the post-processing is the killer - though in fairness, the network traffic is taking that second, not the processing. Timing will help resolve this stuff, pinpoint where to focus effort.
 
 [ ] Issues noted with drawing so far:
+	[ ] Sound is VERY low - how's VoIP going to work? Get an app.. but then need one with an API, or set it up and make sure they know not to mess with it.
+	[ ] Perhaps an indexing method (diff, unique id, and handshake) will make sure thatha doesn't erase early. It might also lower spurious updates. Perhaps the webserver is having timing issues too, and this will help resolve them (don't send unnecessarily if nothing has changed). 
+	[ ] Be careful to use solid/striped or something other than red/green as colors are hard to tell apart I bet as we get older.
 	[ ] DISABLE auto-turn off when this app is on!! 
 	[ ] Don't check for connectivity. What happens if I don't have it?
 	[ ] Timing on the transmits - is it actually finishing the thread run() in 1 second or less?
