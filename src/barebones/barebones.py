@@ -36,9 +36,8 @@ def rle_decode (rle_string):
 				return False
 
 			# Expand out the run
-			for m in xrange(run):
-				# Image appears transposed otherwise
-				pixels[col, row] = color 
+			for m in xrange(run):				
+				pixels[N-1-row, col] = color 
 
 				col += 1
 				if col >= N:

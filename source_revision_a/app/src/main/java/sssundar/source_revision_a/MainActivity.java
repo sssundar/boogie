@@ -71,7 +71,7 @@ public class MainActivity extends Activity implements OnClickListener {
                 while (!Thread.interrupted())
                     try
                     {
-                        Thread.sleep(1000);
+                        Thread.sleep(400);
                         sampleScreen();
                     } catch (InterruptedException e) {
                         Log.d("Boogie", "Encoding thread was interrupted");

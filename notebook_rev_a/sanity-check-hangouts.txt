@@ -109,6 +109,9 @@ Here's the idea.
 	[*] Downsample the bitmap immutably to 200x200, and compute the RLE in color,run,run,run format.
 	[*] Figure out HTTP post in Android
 	[*] Build, test it on the Nexus/Browser after spinning up the EC2 instance. Works!
+	[*] Deadline:** July 5th evening**
+[*] Ok, there is massive lag. At least 2 seconds, even with http-gets at 0.2seconds and http-post at 0.4 seconds. Looking at the network traffic on the Android monitor it's clear the processing is taking about 1 second on the tablet, so we have 1 second delay there, followed by 300 ms lag, followed by up to 0.2 seconds lag on our end on the browser, so duh it's taking 2-10 seconds to update. Not great. 
+
 [ ] Work on a basic http get app for the receiver as well (build for my phone)
 [ ] Success on these is just.. get it working, fast. I want to see about resolution & bandwidth, lag, usability, clunkiness factor, ASAP.
 	[ ] Deadline:** July 5th evening**
@@ -121,7 +124,11 @@ Here's the idea.
 [ ] Observe and make notes on Thatha's usage patterns 
 [ ] Deadline: **July 7th evening**
 
+[ ] I think it'd be worth as a first pass putting in a "done" button so Thatha can tell Amma he's done writing, or at least to put in some kind of two way communication so he knows when she's seen what he's written. Maybe something as simple as a counter that resets every time there's a diff in the JSON string. 
+[ ] Ok, well, I should try out free/paid options to see what kind of lag they have, and see what DeadSimpleScreenSharing lag is, and then look into ways of speeding this up. I mean, clearly, the post-processing is the killer - though in fairness, the network traffic is taking that second, not the processing. Timing will help resolve this stuff, pinpoint where to focus effort.
+
 [ ] Issues noted with drawing so far:
+	[ ] DISABLE auto-turn off when this app is on!! 
 	[ ] Don't check for connectivity. What happens if I don't have it?
 	[ ] Timing on the transmits - is it actually finishing the thread run() in 1 second or less?
 	[ ] What happens to the server if I pass in bad JSON or a string without the necessary field?
