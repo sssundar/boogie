@@ -24,3 +24,11 @@ Created Friday 01 July 2016
 17. https://docs.python.org/2/library/struct.html for checking endianness and RLE decoding
 18. http://askubuntu.com/questions/507459/pil-install-in-ubuntu-14-04-1-lts
 19. http://stackoverflow.com/questions/32550181/how-to-receive-json-post-request-data-in-cherrypy-in-python-2-7
+20. http://stackoverflow.com/questions/37318561/rendering-problems-exception-raised-during-rendering-com-android-util-propertie
+21. http://stackoverflow.com/questions/26492522/how-do-i-remove-the-title-bar-in-android-studio
+22. http://www.codeproject.com/Articles/1057416/Android-Drawing-App-Tutorial-Pt
+23. http://code.tutsplus.com/tutorials/android-sdk-create-a-drawing-app-interface-creation--mobile-19021
+24. http://stackoverflow.com/questions/17324849/android-studio-gradle-build-speed-up Always look at the Gradle Console
+25. http://stackoverflow.com/questions/37896758/aapt-error-endless-gradle-building Always look at the Gradle Console
+26. https://developer.android.com/studio/run/device.html How to get Studio to recognize Nexus 7, use debugger
+27. http://askubuntu.com/questions/710426/android-sdk-on-ubuntu-32bit Google dropped support for 32 bit systems

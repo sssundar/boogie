@@ -96,18 +96,34 @@ Here's the idea.
 	[*] This did it. I definitely get skipping in EC2 with 200 ms POSTs. If I slow it to 2 second updates, there's no skipping. 
 	[*] Deadline:** July 3rd afternoon.**
 [ ] Work on a basic design for the doodle app - e.g. just drawing. No Skype. 
-[ ] Deadline:** July 4rd late morning (before noon)**
+	[*] Had to install a few extra (older) SDKs to Android Studio to get layout rendering to simulate
+	[*] Ok, followed steps more or less. 
+	[*] Gradle build time is obscene (>@ hours). Fixed by changing build-tools, SDK version.
+	[*] Don't seem to have Android debug bridge installed.. oh, Google dropped support for 32 bit systems. Whoops. Stackoverflow to the rescue.
+	[*] Laptop/Android Studio recognize Nexus 7 fine now. 
+	[*] Looks awesome. Some issues, noted below. Erasure works fine. 
+	[*] Added no autorotate. No screen erasure now except with back button & erase button. Can disable back button later.
+[ ] Let's now work on getting a bitmap RLE'd and sending out via HTTP post/put.
+[ ] Work on a basic http get app for the receiver as well (build for my phone)
+[ ] Success on these is just.. get it working, fast. I want to see about resolution & bandwidth, lag, usability, clunkiness factor, ASAP.
+	[ ] Deadline:** July 5th evening**
 
+[ ] Issues noted with drawing so far:
+	[ ] Home, Switch buttons are fine, don't erase drawing. Back button erases drawing. Probably too much of a pain to remove them.
+	[ ] Might want to move erase button to top so Thatha has no chance of accidentally bringing in notification screen and exiting out. Try it with him.
+	[ ] Line width is fine. Dots are a bit difficult. Should see if he gets used to it. 
+	[ ] Even with hand resting against tablet, because screen doesn't go to edges, no push factor here. Especially snce he's right handed.
+	[ ] Disable back button.
 [ ] Don't know what this does to size of the message. Need to check Amazon EC2 usage, and can also store logs of this sort of information on the server - timing between observed requests, and classification of the requests to see if even the server sees loss or overlap or other weird timing.
 [ ] Putting unique indexes (large, large wrapping #) on these messages may help order them so they can be displayed well despite the slow update. I can also have talkback so the app knows if its message has been received by Amma.
 
 [ ] Add in VoIP demo to me alone.
 [ ] Test paid options like ScreenMeet with a doodle app to see how much better things can get
-[ ] Deadline:** July 5th morning**
+[ ] Deadline:** July 6th evening**
 
 [ ] Demo to Thatha with me, first, then Amma (web-only + actual phone, or Video Conference so he can see she can see).
 [ ] Observe and make notes on Thatha's usage patterns 
-[ ] Deadline: **July 6th evening**
+[ ] Deadline: **July 7th evening**
 
 [ ] Aesthetics - usability - home buttons, see how Thatha uses the tablet, make it easier for his use. How to avoid recognizing his hand pressure as a press in the doodle? Look for open-source doodle code with APIs if possible to grab the screen..
 [ ] Remote control of Tablet - Remote Update of App - App without Developer Mode
