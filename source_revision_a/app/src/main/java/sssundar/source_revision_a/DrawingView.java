@@ -17,12 +17,14 @@ public class DrawingView extends View {
     private Path drawPath;
     //drawing and canvas paint
     private Paint drawPaint, canvasPaint;
-    //initial color
-    private int paintColor = 0xFF660000;
+
+    // paint color is black
+    private int paintColor = 0xFF000000;
+
     //canvas
     private Canvas drawCanvas;
     //canvas bitmap
-    private Bitmap canvasBitmap;
+    public Bitmap canvasBitmap;
 
     public DrawingView(Context context, AttributeSet attrs){
         super(context, attrs);
@@ -85,4 +87,5 @@ public class DrawingView extends View {
         drawCanvas.drawColor(0, PorterDuff.Mode.CLEAR);
         invalidate();
     }
+
 }

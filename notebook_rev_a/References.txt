@@ -32,3 +32,11 @@ Created Friday 01 July 2016
 25. http://stackoverflow.com/questions/37896758/aapt-error-endless-gradle-building Always look at the Gradle Console
 26. https://developer.android.com/studio/run/device.html How to get Studio to recognize Nexus 7, use debugger
 27. http://askubuntu.com/questions/710426/android-sdk-on-ubuntu-32bit Google dropped support for 32 bit systems
+28. http://stackoverflow.com/questions/17841577/uploading-png-to-server-with-java-using-post-data this seems like a security issue. Try RLE first.
+29. https://developer.android.com/reference/android/graphics/Bitmap.html#createScaledBitmap(android.graphics.Bitmap, int, int, boolean)
+30. http://stackoverflow.com/questions/11687011/run-loop-every-second-java
+31. http://stackoverflow.com/questions/12553843/invoke-a-method-in-android-app-during-app-kill-or-termination
+32. http://stackoverflow.com/questions/4172917/explanation-of-the-method-getpixels-for-a-bitmap-in-android
+33. http://stackoverflow.com/questions/5669501/how-to-get-rgb-values-of-bitmap-in-android
+34. http://stackoverflow.com/questions/21404252/post-request-send-json-data-java-httpurlconnection
+35. http://www.tutorialspoint.com/android/android_network_connection.htm
