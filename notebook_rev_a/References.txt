@@ -44,3 +44,11 @@ Created Friday 01 July 2016
 37. http://stackoverflow.com/questions/10850753/how-to-convert-a-liststring-into-a-comma-separated-string-without-iterating-li
 38. https://developer.android.com/training/articles/perf-tips.html#ObjectCreation
 39. https://www.toptal.com/android/top-10-most-common-android-development-mistakes
+40. https://productforums.google.com/forum/#!topic/nexus/oTvwcpKxAdE
+41. https://developer.android.com/training/multiple-threads/define-runnable.html
+42. https://developer.android.com/reference/android/os/Process.html#setThreadPriority(int)
+43. https://developer.android.com/reference/java/net/HttpURLConnection.html
+44. http://stackoverflow.com/questions/24417817/stopping-silent-retries-in-httpurlconnection
+45. http://stackoverflow.com/questions/27094544/android-java-httpurlconnection-silent-retry-on-read-timeout/30245868#30245868
+46. https://code.google.com/p/android/issues/detail?id=163595
+47. http://stackoverflow.com/questions/19227142/http-status-code-411-length-required

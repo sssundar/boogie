@@ -117,25 +117,64 @@ Here's the idea.
 [*] Test paid options like ScreenMeet with a doodle app to see how much better things can get
 	[*] Several thoughts shown below, but VERY easy to use, and certainly cheaper than EC2 instance. Might be worth it. Should show Patti and see what she thinks of using it, and try to teach Thatha too.
 
-[ ] Look into Latency with EC2 & India-US, look into delay calculations, variation
-	[ ] Internet connectivity checks periodically - how often does it "cut off?"
-	[ ] Maybe sending out data every 0.4s is overloading the server or typing up the file we're trying to display on the webserver index
-		[ ] Check if server post-complete-post overlap happening?
-	[ ] I need numbers on this
-		[ ] I need to have a log on the webserver to see how often post data is received, and flags to say whether there is overlap.
-		[ ] I should keep track of timestamps on the Android side (debug logs) as well, just to see how often it thinks it's sending out data
-			[ ] Don't ignore those errors in the logs..
-			[ ] What is the processing time?
-		[ ] A client app as well as a source/server would help us, too, as then the server wouldn't need to render a PNG on each POST, it could just send out the RLE encoding
-	[ ] Once we know where the lag/variable delay is coming from we can figure out how to stop it. If it's networking - diffs, use proper libraries, ... if it's processing, PNG, deflate, etc.
+[*] First priority now is finding out where bottlenecks are. When the screenshare is usable, with consistent <1s delay, then we can move onto other functionality. "Definition of Success"
+	[*] I need to have a log on the webserver to see how often post data is received, and flags to say whether there is overlap. I should view these via less on the server itself.
+		[*] Maybe sending out data every 0.4s is overloading the server or typing up the file we're trying to display on the webserver index
+			[*] Check if server post-complete-post overlap happening?
+		[*] No, with 2 second delays we see 30 ms processing delays for post data -> png conversion on my laptop and 6-7 ms on the EC2 instance. This is not the bottleneck.
+		[*] On the EC2 instance, when I log start time differences between 2-second delayed post requests from my laptop, I see mostly 2.5 second differences between POST requests, and every once in a while 3.4, 7, 12.5 seconds - somewhat rarely, but as we know from the UI tests, clearly enough to be visible and jarring.
+		[*] So the issue in lag delay/variability is almost certainly between Android/Server and is only made worse by the increased processing the Android system has to do.
+		[*] Ok.. let's try and make sense of these numbers. We're sending out data in POST requests every 2 seconds. We're seeing requests at the server every 2.5 seconds. One would think if I sent things out periodically, I'd receive them with the same period. 
+			[*] Well, that's not strictly speaking true. Technically I am sleeping 2 seconds in between processing events in the test_barebones.py code. So if all that processing took 2.5 seconds the math'd work out. Then we'd just need to explain the random LONG delays.
+			[*] Let's do the same test again locally (127.0.0.1) to see if there's still a 2.5 s delay
+				[*] No, it's 2 seconds and change in ms. This means something about HTTP post to remote addresses (not just loopback) is adding 500 ms delay (maybe just TCP, and losses, that's how long it takes)
+			[ ] Ok, locally, let's check start of processing post-sleep & end of HTTP post locally, then also to the webserver (in test_barebones.py)
+				[*] Locally it is never more than 40ms for HTTP Post
+				[*] Remotely, here's what I notice. Yes, HTTP Post on the local source takes about 0.5 seconds. Sometimes it takes as much as 5 seconds, often 1 second, but mostly 0.5 seconds. On the server side, the same timings turn into whatever the local send time was + 0.5 seconds. This is because I ask the system locally to wait 0.5 seconds before sending another data packet out AFTER it's sent the POST data. This is actually unnecessary, we could keep it in a tight loop to speed up the response.
+				[*] So apparently HTTP post sending is where the delay comes in - sometimes it takes forever locally and these blips might be a part of life with HTTP.
+				[*] Really speaking we don't know whether the issue is in the EC2 connection or the transmission from my laptop. Something about that connection seems to sometimes fail horribly, or take a while. It's surprsing that 500 characters take 0.5 seconds to send - thats 1 char/ms or 8 bits/ms or 8000 bps or 8kbps. That's really low. 
+				[*] Let's try the same timing while I have pulled the page up.
+					[*] Seems fine. Removed all delays - works with about 2 Hz.
+				[*] Here's what I think: priorities while you're in India:
+					[*] **UI, the feel, VoIP + drawing + making that seamless for him + remote update, troubleshooting.**
+					[*] ~ 0.5 seconds to the server + 0.2 seconds to the phone gives about a 1 Hz update. That's good enough for now. We can play with **diffs/timeouts/retries** to speed it up later, when you aren't around Thatha, or just if you have time. But for all you know VoIP is going to slow this down considerably - let's get it end-to-end to see, then optimize. Even poor function (this, or wrt UI for thatha, screenmeet) are better than nothing.
+	[x] Internet connectivity checks periodically - how often does it "cut off?" **Not doing right now.**
+	[*] Are UDP & video game tips (forward projection) worthwhile? How to set up a UDP server? If processing time is the killer, is it worth sending over only blocks that change, and breaking up the system into 16-32 blocks assuming thatha doesn't write too fast? That won't deal with the sudden 10s delays, but it will halve the time over TCP, no, at the cost of less reliability? 
+		[*] Well, the fact that it takes 10x as long via TCP as UDP says there's loss in the channel. Let's leave it as TCP unless it's truly unusable. The first goal is end-to-end function and a usable UI, then we'll worry about speeding things up.
+	[ ] Get a **persistent** App for sender/receiver without any background thread delays except for processing/networking. 
+		[*] For the tablet side - get a timing library & print logs
+			[*] Track start of start of sampling, all processing time, HTTP post time, and both, separately. Just to Debug logs, for visual scan
+			[*] Also keep the logs (cleared on start in code) on the server side.
+		[*] Well, logs show mostly 500 ms transfers to the server (and the server has a few 10s of ms processing time) so we need a client app to show us get timing, no?
+		[*] Problem is we get OFTEN 3-6 second delays. I think it's because I'm running on a background thread and so Android is deprioritizing it.
+			[*] Changing thread priority to foreground still makes it wait 6 seconds every few seconds. That's our issue.
+			[*] Let's make it an URGENT thread. I don't care about responsivity outside this app, after all.
+			[*] THREAD_PRIORITY_URGENT_DISPLAY makes the base delay 1.3 seconds, but it's consistent, and the UI doesn't appear to suffer.
+			[*] No, still have 6 second delay issue, sometimes twice in a row.
+			[*] Noticed a few things: apparently the HTTPUrlConnection has silent retry of post requests. Might be worth removing that, as it's faster to just send a new one!
+				[*] Using chunked request + including content length in bytes fixes the problem. Even on Android the network op takes 500 ms and the processing takes 30 ms. 
+				[*] **Now I am getting 500 ms consistent transfer out of the tablet. I saw this before, then it deteriorated. Maybe threading issues? Well, for now let it be.**
+			[x] Also might be worth using a different library (OkHTTP fixed silent try in April 2015, or Volley?)
+				[*] No need
+			[*] Also should close connections, maybe the giant wait is garbage collection!
+				[x] **Only closing once - what about other times?**
+	[*] Then install this persistently, and play with Thatha Patti so they get used to Android and drawing on it. Note down UI bugs, issues Thatha has, and observed delay.
+	[*] Deadline:** July 8th by 4 PM. Didn't get to everything but close enough.**
+
+[ ] Write a basic client app that takes the bitmap via a get request of text, and unpacks it into a bitmap. Time it!!  
+[ ] Look into power-rail wifi from periamma to patti
+
+[ ] Noticed that if the tablet charges completely down it's a ROYAL pain to get booted - just tell them how to power down/up and make sure they don't let it run dry, and that they know to call you if it does do that.
+	[ ] https://productforums.google.com/forum/#!topic/nexus/oTvwcpKxAdE
+[*] Noticed that I can't log into the server remotely and start up this app - if I do & it seems to bind port 80 but the app can't talk to the server!
+	[*] **lol, forgot to connect to wifi. No duh I have an IO exception - I should notify the user if this is the case!!**
+	[*] try the server business again - yep, no problem
+
 [ ] Work on a basic http get app for the receiver as well (build for my phone)
 [ ] Add in VoIP demo to me alone
-[ ] Deadline:** July 6th evening**
 
 [ ] Demo to Thatha with me, first, then Amma (web-only + actual phone, or Video Conference so he can see she can see).
 [ ] Observe and make notes on Thatha's usage patterns 
-[ ] Deadline: **July 7th evening**
-
 
 [ ] Notes on ScreenMeet/doodle app
 	[ ] wow, that looked great, but it had up to 13 seconds delay from the tablet to the phone (i'm just assuming their servers are in USA, so it's a good estimate for my app too).

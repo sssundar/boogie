@@ -3,7 +3,7 @@ from time import sleep
 import numpy as np
 import sys
 import urllib2, json
-
+import time, datetime
 
 # Samples images must be NxN to match what is hardcoded into barebones.py
 N = 200
@@ -56,16 +56,17 @@ if __name__ == "__main__":
 	
 	# Port number is 80 by default with http://
 	dns = "http://ec2-54-67-127-196.us-west-1.compute.amazonaws.com/"		
-	#dns = "http://127.0.0.1:8080"
+	# dns = "http://127.0.0.1:8080"
 
 	count = 100
 	while (count > 0):
 		for rle in rles:
-			j = json.dumps({'run_length_encoding': rle})
+			j = json.dumps({'run_length_encoding': rle})			
+			start_time = time.time()			
 			req = urllib2.Request(dns, j, headers={'Content-Type': 'application/json'})
 			RESULT = urllib2.urlopen(req).read()
-			print (RESULT)
-			sleep(2)
+			# print (RESULT)
+			print "HTTP Post Delay: %0.3f s" % (time.time()-start_time)
 
 		count -= 1
 

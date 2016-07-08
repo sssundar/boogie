@@ -2,6 +2,7 @@ import os, os.path
 import string
 import cherrypy
 from PIL import Image
+import time, datetime
 
 # Hard Coded Image Size Required (pixel width)
 N = 200
@@ -61,6 +62,9 @@ def rle_decode (rle_string):
 class RLEDecoderWebService(object):
 	exposed = True
 
+	# To Study Variable POST Delay
+	start_time = time.time()
+
 	def GET(self):		
 		counter = """<img src=\"""" + STATIC_PATH + """\">""" if os.path.isfile(PATH) else """<body> Nothing as yet... </body>"""
 		index = """<html> <meta http-equiv="refresh" content="0.2">""" + counter + """ </html>"""
@@ -68,9 +72,31 @@ class RLEDecoderWebService(object):
 
 	# Expects a JSON input with key 'run_length_encoding'
 	@cherrypy.tools.json_in()    
-	def POST(self):
+	def POST(self):		
+		# To Study Processing Time
+		# start_time = time.time()
+		
+		# To Study Variable POST Delay
+		post_delay = RLEDecoderWebService.start_time
+		RLEDecoderWebService.start_time = time.time()
+		post_delay = RLEDecoderWebService.start_time - post_delay
+
 		if rle_decode(cherrypy.request.json['run_length_encoding']):
+			
+			# To Study Processing Time
+			# end_time = time.time()			
+			# uptime = int((end_time - start_time) * 1000) # ms
+			# human_uptime = str(datetime.timedelta(milliseconds=uptime))
+
+			with open("server_post_timing.log", "a") as myfile:
+				# To Study Processing Time
+				# myfile.write("Start, Delta: %0.3f, %s\n" % (start_time, human_uptime))    			
+
+				# To Study Variable POST Delay
+				myfile.write("POST Delay: %0.3f\n" % post_delay)    	
+
 			return "Data accepted"
+
 		return "Data rejected"		
 
 if __name__ == '__main__':
@@ -84,9 +110,13 @@ if __name__ == '__main__':
 			'tools.staticdir.dir': './public'
 		}
 	}	
-	
+
+	# Erase previous log
+	with open("server_post_timing.log", "w") as myfile:
+		myfile.write("")
+
 	# Locally: 
-	#cherrypy.config.update( {'server.socket_host': '127.0.0.1', 'server.socket_port': 8080} )      	
+	# cherrypy.config.update( {'server.socket_host': '127.0.0.1', 'server.socket_port': 8080} )      	
 
 	# Remotely: 
 	# Must be priviledged to bind port 80

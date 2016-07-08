@@ -3,6 +3,8 @@ package sssundar.source_revision_a;
 import android.app.Activity;
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.os.Process;
+import android.os.SystemClock;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -64,18 +66,24 @@ public class MainActivity extends Activity implements OnClickListener {
         {
 
             private int[] bmPixels = new int[40000];
+            private long loop_uptime, http_uptime;
 
             @Override
             public void run()
             {
-                while (!Thread.interrupted())
-                    try
-                    {
-                        Thread.sleep(400);
-                        sampleScreen();
-                    } catch (InterruptedException e) {
-                        Log.d("Boogie", "Encoding thread was interrupted");
-                    }
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_DISPLAY);
+
+                try {
+                    Thread.sleep(400);
+                } catch (InterruptedException e) {
+                    Log.d("Boogie", "Encoding thread was interrupted before it could start");
+                }
+
+                while (!Thread.interrupted()) {
+                    loop_uptime = SystemClock.uptimeMillis();
+                    sampleScreen();
+                    Log.d("Boogie-Loop", String.valueOf(SystemClock.uptimeMillis()-loop_uptime) + " ms");
+                }
             }
 
             private void sampleScreen() {
@@ -118,6 +126,7 @@ public class MainActivity extends Activity implements OnClickListener {
                 Log.d("Boogie", "Length of RLE is " + String.valueOf(csdata.length()) + " characters");
 
                 // HTTP post this string to the Amazon EC2 webserver associated with this app
+                http_uptime = SystemClock.uptimeMillis();
                 String url = "http://ec2-54-67-127-196.us-west-1.compute.amazonaws.com/";
                 try {
                     URL server = new URL(url);
@@ -126,6 +135,7 @@ public class MainActivity extends Activity implements OnClickListener {
                     ec2.setDoInput(true);
                     ec2.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
                     ec2.setRequestProperty("Accept", "application/json");
+                    ec2.setChunkedStreamingMode(0);
                     try {
                         ec2.setRequestMethod("POST");
 
@@ -133,9 +143,12 @@ public class MainActivity extends Activity implements OnClickListener {
                         try {
                             data.put("run_length_encoding",csdata);
                             try {
-                                OutputStream os = ec2.getOutputStream();
-                                os.write(data.toString().getBytes("UTF-8"));
-                                os.close();
+                                byte[] dat = data.toString().getBytes("UTF-8");
+                                ec2.setRequestProperty("Content-Length", String.valueOf(dat.length));
+
+                                OutputStream ostream = ec2.getOutputStream();
+                                ostream.write(dat);
+                                ostream.close();
 
                                 int HttpResult = ec2.getResponseCode();
                                 if (HttpResult == HttpURLConnection.HTTP_OK) {
@@ -143,8 +156,10 @@ public class MainActivity extends Activity implements OnClickListener {
                                 } else {
                                     Log.d("Boogie", "RLE POST Failed with Response Code: " + String.valueOf(HttpResult));
                                 }
+                                ec2.disconnect();
+                                Log.d("Boogie-HTTP", String.valueOf(SystemClock.uptimeMillis() - http_uptime) + " ms");
                             } catch (IOException o) {
-                                Log.d("Boogie", "IO Exception!");
+                                Log.d("Boogie", "IO Exception: " + o.getMessage());
                             }
                         } catch (JSONException j) {
                             Log.d("Boogie", "JSONException!");
