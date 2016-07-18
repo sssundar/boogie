@@ -76,10 +76,10 @@ class RLEDecoderWebService(object):
 		# To Study Processing Time
 		# start_time = time.time()
 		
-		# To Study Variable POST Delay
-		post_delay = RLEDecoderWebService.start_time
-		RLEDecoderWebService.start_time = time.time()
-		post_delay = RLEDecoderWebService.start_time - post_delay
+		# # To Study Variable POST Delay
+		# post_delay = RLEDecoderWebService.start_time
+		# RLEDecoderWebService.start_time = time.time()
+		# post_delay = RLEDecoderWebService.start_time - post_delay
 
 		if rle_decode(cherrypy.request.json['run_length_encoding']):
 			
@@ -88,12 +88,12 @@ class RLEDecoderWebService(object):
 			# uptime = int((end_time - start_time) * 1000) # ms
 			# human_uptime = str(datetime.timedelta(milliseconds=uptime))
 
-			with open("server_post_timing.log", "a") as myfile:
-				# To Study Processing Time
-				# myfile.write("Start, Delta: %0.3f, %s\n" % (start_time, human_uptime))    			
+			# with open("server_post_timing.log", "a") as myfile:
+			# 	# To Study Processing Time
+			# 	# myfile.write("Start, Delta: %0.3f, %s\n" % (start_time, human_uptime))    			
 
-				# To Study Variable POST Delay
-				myfile.write("POST Delay: %0.3f\n" % post_delay)    	
+			# 	# To Study Variable POST Delay
+			# 	myfile.write("POST Delay: %0.3f\n" % post_delay)    	
 
 			return "Data accepted"
 
@@ -111,9 +111,9 @@ if __name__ == '__main__':
 		}
 	}	
 
-	# Erase previous log
-	with open("server_post_timing.log", "w") as myfile:
-		myfile.write("")
+	# # Erase previous log
+	# with open("server_post_timing.log", "w") as myfile:
+	# 	myfile.write("")
 
 	# Locally: 
 	# cherrypy.config.update( {'server.socket_host': '127.0.0.1', 'server.socket_port': 8080} )      	

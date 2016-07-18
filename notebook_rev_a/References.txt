@@ -13,6 +13,7 @@ Created Friday 01 July 2016
 6. https://github.com/OfficeDev/skype-android-app-sdk-samples/blob/master/HealthcareApp/app/src/main/java/com/microsoft/office/sfb/healthcare/SkypeCall.java
 7. 5 open source drawing applications fror Android - opensource.com
 8. stackoverflow how to send data to a web server from android
+
 9. http://docs.cherrypy.org/en/latest/tutorials.html
 10. aosabook.org 500 Lines or Less, A Simple Web Server
 11. http://stackoverflow.com/questions/7494171/python-cherrypy-web-app-deployed-locally-but-not-visible-over-intranet
@@ -24,6 +25,7 @@ Created Friday 01 July 2016
 17. https://docs.python.org/2/library/struct.html for checking endianness and RLE decoding
 18. http://askubuntu.com/questions/507459/pil-install-in-ubuntu-14-04-1-lts
 19. http://stackoverflow.com/questions/32550181/how-to-receive-json-post-request-data-in-cherrypy-in-python-2-7
+
 20. http://stackoverflow.com/questions/37318561/rendering-problems-exception-raised-during-rendering-com-android-util-propertie
 21. http://stackoverflow.com/questions/26492522/how-do-i-remove-the-title-bar-in-android-studio
 22. http://www.codeproject.com/Articles/1057416/Android-Drawing-App-Tutorial-Pt
@@ -32,6 +34,7 @@ Created Friday 01 July 2016
 25. http://stackoverflow.com/questions/37896758/aapt-error-endless-gradle-building Always look at the Gradle Console
 26. https://developer.android.com/studio/run/device.html How to get Studio to recognize Nexus 7, use debugger
 27. http://askubuntu.com/questions/710426/android-sdk-on-ubuntu-32bit Google dropped support for 32 bit systems
+
 28. http://stackoverflow.com/questions/17841577/uploading-png-to-server-with-java-using-post-data this seems like a security issue. Try RLE first.
 29. https://developer.android.com/reference/android/graphics/Bitmap.html#createScaledBitmap(android.graphics.Bitmap, int, int, boolean)
 30. http://stackoverflow.com/questions/11687011/run-loop-every-second-java
@@ -52,3 +55,23 @@ Created Friday 01 July 2016
 45. http://stackoverflow.com/questions/27094544/android-java-httpurlconnection-silent-retry-on-read-timeout/30245868#30245868
 46. https://code.google.com/p/android/issues/detail?id=163595
 47. http://stackoverflow.com/questions/19227142/http-status-code-411-length-required
+
+48. https://www.kamailio.org/wiki/packages/debs
+49. http://www.kamailio.org/docs/tutorials/sip-introduction/
+50. http://kb.asipto.com/kamailio:skype-like-service-in-less-than-one-hour
+51. http://www.kamailio.org/wiki/packages/debs
+52. http://www.howtogeek.com/howto/ubuntu/see-where-a-package-is-installed-on-ubuntu/
+53. http://marc.info/?l=sr-users&m=134765927625524&w=2
+54. http://linuxg.net/how-to-install-jitsi-2-5-on-ubuntu-linux-mint-pinguy-os-lxle-debian-crunchbang-and-other-ubuntu-and-debian-derivatives/
+55. http://www.mpipks-dresden.mpg.de/~mueller/docs/suse10.1/suselinux-manual_en/manual/cha.linphone.html
+56. http://lists.sip-router.org/pipermail/sr-users/2013-July/078671.html
+57. http://www.kamailio.org/docs/modules/4.3.x/modules/mi_fifo.html#idp209104
+58. http://marc.info/?l=openser-users&m=130918564729871
+
+58. https://dopensource.com/2016/05/10/kamailio-quick-install-guide/
+59. https://sonnguyen.ws/install-kamailio-debianubuntu/
+60. https://freeswitch.org/confluence/display/FREESWITCH/Amazon+EC2 OPENING PORTS
+61. http://www.cyberciti.biz/faq/ubuntu-add-user-to-group/ ADDING to group.. 
+
+62. http://oversip.net[[http://oversip.net/|/]]
+

@@ -159,10 +159,72 @@ Here's the idea.
 			[*] Also should close connections, maybe the giant wait is garbage collection!
 				[x] **Only closing once - what about other times?**
 	[*] Then install this persistently, and play with Thatha Patti so they get used to Android and drawing on it. Note down UI bugs, issues Thatha has, and observed delay.
+		[*] Generate APK in build toolbar, then adb install ../../../Documents/boogie/source_revision_a/app/build/outputs/apk/app-debug.apk 
+		[*] or just email it to the Android device and uncheck 'unknown app install' in settings
 	[*] Deadline:** July 8th by 4 PM. Didn't get to everything but close enough.**
 
+[*] Yep, wow. I have barely worked on this in the last 6 days. Learned a lot by playing with Thatha - tons of notes to transfer. But bad show.
+[*] Need a stylus (ordered the Cosmonaut & the Bamboo 3/Amazon etc.) just to have a few to play with. Gloves will help Thatha avoid touching the screen in multiple places. 
+	[*] Bamboo delivery failure. Ordered Griffin instead - youtube reviews show people writing chinese, good control.
+
+
+[ ] Decided the UI/UX control offered by a personal SIP server was worth the hassle. Skype URIs are a possibility but if things go wrong it's hard to get feedback to Thatha.
+	[*] Therefore immediate priority is to set up a SIP server & a simple VoIP app between two Android clients to test quality. Server should be in the cloud.
+	[*] Using Kamailio SIP server (open)
+		[*] sudo apt-get install kamailio worked fine in Ubuntu 14.04 LTS (Trusty AMD64 for x86_64 arch)
+		[*] Also installed mysql modules, tls module, as per Skype-Voip-SIP tutorial. Had to update package listings with deb key for Kamailio
+		[*] Added RTPproxy as well as per tutorial
+		[*] Installed mysql server and set root password (noted elsewhere)
+	[*] looks like the reason for having a server is because mobile phones are mobile, and the ip address can change, so the two clients register with the server and this makes them reachable by the other
+		[*] I suppose what I really want is to set up a redirect server
+	[*] Set up users 'sush' and 'mani' on the SQL database for the server. Passwords logged elsewhere. 
+	[*] Made sure kamctlrc had amazon ec2 DNS name
+	[*] Have some 'on startup commands' to run if the server ever goes down - check the tutorial for 'skype-like in under an hour'
+		[*] Whoops, turns out Ubuntu apt-get installs Kamailio somewhere other than [[/usr/local/lib64...]] so dpkg -L helped locate the packages, so we can set the right mpath= in the cfg file.
+		[*] Mine is [[/usr/lib/x86_64-linux-gnu/kamailio/modules/]]
+		[*] Some other odds and ends - the guide is dated, some rtp_proxy commands needed to be changed.
+		[*] That did it - it starts at least.
+			[x] For now, no NAT traversal or RTP proxy - I assume amazon EC2 is making life easy here till proven otherwise
+	[ ] Well, issue with checking if processes are running, a .fifo file is not found
+		[*] removed "WITH NAT" from kamailio.cfg file just because i don't intend to use it just now (will definitely need it if I run this on a Pi2 at home down the road, but that's a year away)
+		[*] the only .fifo I can see is in a kamctl folder near the modules folder in [[/usr/lib/x86_64-linux-gnu/kamailio/kamctl/...]]
+		[*] So I'll direct to that (changes made to kamailio.cfg & kamctlrc files.
+		[*] Not helping.
+		[*] Well, that was a mistake. The FIFO file is really for storing external commands. I just overwrote an important file. I need to do a clean install now. Shoot.
+	[*] Reinstalled, and just accepting for now that kamctl logging, control will not work for me. 
+	[ ] Let's test along with the tutorial using Jitsi on my laptop & Padma Patti's laptop. Possibly need two different networks for this to work - Patti's, Athai's if need be.
+		[x] Installing Jitsi 2.5 on my i386 machine why not (very old but likely stable)
+			[x] No GUI working for me. Nuts.
+		[*] Installed Linphone instead. Configuring for NAT/Gateway passing. For now, on Linux Mint, just used DuckDNS to get my router's public IP and set that. 
+		[x] Not registering with Kamailio server on EC2 - taking a closer look, seems like it's listening on its PRIVATE IP. But.. that shouldn't matter, Amazon should figure that out.
+			[x] But I have a no response timeout. This is on my laptop - and on my phone, it looks like.
+		[x] Using uPNP for NAT port forwarding. Fixed 5060 port for UDP in server for SIP. Configured server with DNS names - possible issue. Finds it fine on the internal side. Not so well on the external side.
+			[x] Didn't help
+		[x] Hmm.. I need to see what my server is seeing. I need to get kamctl working.
+			[*] Tried setting ERROR: Error opening Kamailio's FIFO [[/var/run/kamailio/kamailio_fifo]] permissions to 776 so it's always writable. Didn't help.
+			[*] The config files are correct in this - maybe the module isn't being loaded?
+			[*] No, it is.
+			[*] tried modifying modparam without luck. 
+			[*] http://fossies.org/linux/kamailio/utils/kamctl/kamctl.fifo suggests a test for existence (writeability) is done on the FIFO file, which is a bit weird if it doesn't exist. That might be the failure point. I will create the file manually.
+			[x] Nope, that didn't help. Same issue - file is deleted when I start the server.
+		[x] Ok, permissions issues. Did a clean purge of kamailio & mysql. Going to start over. This time, installed, and changed settings in [[/etc/default/kama..]] so it runs as ROOT.
+			[x] Added root and ubuntu to kamailio group, running as sudo -s (root). Nothing.
+			[x] Also added a lot more memory - 256Mb shared RAM and 32 Mb private.
+			[x] Also tried changing startup options in kamctlrc script, and uncommenting a lot of default settings
+			[x] Also tried changing all script locations to tmp/ which has all permissions, why not.
+		[*] Ok, that's it - something is weird about this and it's not yet worth troubleshooting further. Let's find an alternative. JUST UDP SIP.
+			[ ] OverSIP
+			[ ] HERE: https://www.opensips.org/Documentation/Tutorials-GettingStarted
+				[ ] See downloaded tutorial
+			[ ] AND: https://www.sipwise.org/news/technical/byov-services-1/
+
+[ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
+[ ] Should try for slow-updating video stills & hand-recognizing touches, authentication via the app, an emergency button that auto-dials a bunch of people with a prerecorded message after a timeout with a very audible/visible note to Thatha with the option to cancel. 
+[ ] Etc. - "can't hear," "can't see," etc. with pings to ME
+[ ] For now, focus on Skype voice. It's annoying to get it working within the same router subnet so use a phone in each house to get this tested. JUST VOICE - Intents, etc. But get sound across in real time.
+
+[ ] Transfer notes from last few days &  prioritize features.
 [ ] Write a basic client app that takes the bitmap via a get request of text, and unpacks it into a bitmap. Time it!!  
-[ ] Look into power-rail wifi from periamma to patti
 
 [ ] Noticed that if the tablet charges completely down it's a ROYAL pain to get booted - just tell them how to power down/up and make sure they don't let it run dry, and that they know to call you if it does do that.
 	[ ] https://productforums.google.com/forum/#!topic/nexus/oTvwcpKxAdE
