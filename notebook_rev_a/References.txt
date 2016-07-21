@@ -74,4 +74,24 @@ Created Friday 01 July 2016
 61. http://www.cyberciti.biz/faq/ubuntu-add-user-to-group/ ADDING to group.. 
 
 62. http://oversip.net[[http://oversip.net/|/]]
+63. https://www.opensips.org/Downloads/Downloads
+64. http://lists.opensips.org/pipermail/users/2016-January/033351.html
+65. https://www.opensips.org/Documentation/Script-CoreParameters-1-9#toc56
+66. http://controlpanel.opensips.org/
+67. https://github.com/OpenSIPS/opensips-cp/tree/master
+68. https://www.ntu.edu.sg/home/ehchua/programming/howto/Apache_HowToConfigure.html
+69. https://serversforhackers.com/configuring-apache-virtual-hosts
+70. http://stackoverflow.com/questions/29295474/opensips-is-listenning-port-5060-but-nmap-shows-5060-is-closed-opensips-cant?rq=1
+71. https://www.opensips.org/Documentation/Tools
+72. http://opensips-open-sip-server.1449251.n2.nabble.com/unauthorized-401-td7592466.html
+73. http://www.opensips.org/html/docs/modules/devel/auth_db.html#id293676
+74. http://tomeko.net/other/sipp/sipp_cheatsheet.php?lang=en
+75. http://sipptutorial.blogspot.in/2013/08/how-to-install-sipp-in-linux.html
+76. http://sipp.sourceforge.net/doc/reference.html#SIP+authentication
+77. https://sourceforge.net/p/sipp/mailman/message/10740282/
+78. https://sourceforge.net/p/sipp/mailman/message/32849123/
+
+79. http://wiki.sip2sip.info/projects/sip2sip/wiki/SipTesting
+80. http://www.geek-tips.com/2015/01/11/asterisk-on-aws-linux/
+81. http://marcelog.github.io/articles/webrtc_with_asterisk_without_webrtc2sip.html
 

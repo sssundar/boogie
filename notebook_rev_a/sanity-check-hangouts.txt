@@ -213,10 +213,83 @@ Here's the idea.
 			[x] Also tried changing startup options in kamctlrc script, and uncommenting a lot of default settings
 			[x] Also tried changing all script locations to tmp/ which has all permissions, why not.
 		[*] Ok, that's it - something is weird about this and it's not yet worth troubleshooting further. Let's find an alternative. JUST UDP SIP.
-			[ ] OverSIP
-			[ ] HERE: https://www.opensips.org/Documentation/Tutorials-GettingStarted
+			[*] OverSIP
+			[*] HERE: https://www.opensips.org/Documentation/Tutorials-GettingStarted
 				[ ] See downloaded tutorial
-			[ ] AND: https://www.sipwise.org/news/technical/byov-services-1/
+			[*] AND: https://www.sipwise.org/news/technical/byov-services-1/
+			[*] Commands (from tutorial video for 1.8, but I am installing LTS 2.2 version)
+				[ ] sudo -s
+				[ ] cd [[/usr/]]local/src/
+				[ ] git clone https://github.com/OpenSIPS/opensips.git -b 2.2 opensips_2_2
+				[ ] install flex, bison, libncurses5, and mysql client development libs (see video)
+				[ ] Installing in [[/usr/local/proxy]] and src in [[/usr/local/src]]
+				[ ] installed mysql-server, common, and client  and set up root user password
+				[ ] Did NOT set up registrant table. 
+				[ ] Set up security group in Amazon EC2 for the instance with ports 5060 open for inbound TCP and UDP traffic.
+				[ ] Shutdown and rebooted instance.
+				[ ] Edited config file with listen=tcp/udp: PRIVATE [[DNS:5060]] advertise [[PUBLICDNS:5060]]
+					[ ] listen=udp:"ip-172-31-12-68.us-west-1.compute.internal":5060 as "ec2-54-$...
+					[ ] listen=tcp:"ip-172-31-12-68.us-west-1.compute.internal":5060 as "ec2-54-$...
+					[ ] Quotes matter.
+				[ ] Starts. Logging unclear - checking [[/var/log/opensips.log]] - CREATED! LOGGING WORKS! WOOOOOT. No registration or users, of course, but we can add that in later by following the video again.
+				[*] Great.
+			[ ] Now to easily register users and such, and configure the opensips server, the tutorial requires a basic Apache server.
+				[ ] Cloned https://github.com/OpenSIPS/opensips-cp/tree/master into an apache [[/var/www]] unconfigured as opensips-cp
+				[ ] Whitelisted [[/var/www/opensips-cp/web]] using [[/etc/apache2/apache2.conf]] and install guide http://controlpanel.opensips.org/
+				[ ] Gave [[/var/www/opensips-cp]] permissions to www-data
+				[ ] Whoops, mysql db password needs to be root password as user is root
+				[ ] That did it. Ok, now we have this on port 80. Let's get it on another port so we reserve HTTP for the screenshare. 
+				[ ] Updated [[/etc/apache2/sites-available/000-default.conf]] so listen on 8080 and direct to [[/var/www/opensips-cp/web]] 
+				[ ] Let's update the server security groups on EC2 management console & restart the apache webserver & sip server, of course.
+				[ ] Just had to update [[/etc/apache2/ports.conf]] and sites-available/000-default.conf to point to the above, and port 8080. 
+				[ ] http://ec2-54-67-127-196.us-west-1.compute.amazonaws.com:8080/ is our new control panel from remote hosts.
+				[ ] Ok, still can't register with linphone, but nmap on my laptop shows port 5060 sip is open on the remote server, at least.
+				[ ] Debugging: https://www.opensips.org/Documentation/Tools specifically ngrep for listening on port 5060
+					[ ] Linphone is absolutely sending packets to the right address (when I try to register) and the server is receiving them for sure.
+					[ ] Server is saying " 401 Unauthorized" and I see this on linphone as well
+					[ ] Set a default sip domain in opensipsctlrc so i could check if users added using CP were actually on the local tables.
+						[ ] both sush, mani exist.
+					[ ] Hm.. perhaps something to do with password hashing, then? 
+					[ ] Try to view www_auth return code: http://opensips-open-sip-server.1449251.n2.nabble.com/unauthorized-401-td7592466.html
+						[ ] With return codes described here: http://www.opensips.org/html/docs/modules/devel/auth_db.html#id293676
+					[ ] Use ngrep -W byline -td any . port 5060 and tail /var/log/opensips.log
+					[ ] Return code is -4, which means "-4 (no credentials) - credentials were not found in request;"
+					[*] This means the problem is on linphone's end. Weird.
+					[ ] Well, let's try. Let's use http://tomeko.net/other/sipp/sipp_cheatsheet.php?lang=en (sipp) to test with complete control, and see if registration CAN succeed
+						[ ] Need to format inputs like: http://sipp.sourceforge.net/doc/reference.html#SIP+authentication
+						[ ] Building with ability to authorize: screw it, used package manager and found "sip-tester" which is the same as sipp
+						[ ] sipp ec2-54-67-127-196.us-west-1.compute.amazonaws.com:5060 -sf REGISTER_client.xml -inf REGISTER_client.csv -m 1 -l 1 -trace_msg -trace_err 
+							[ ] UDP with 1 socket by default
+							[ ] XML and CSV base downloaded from tomeko.net
+							[ ] That works fine now. It was formatting.
+						[ ] Whoops, build with openssl support for auth. https://sourceforge.net/p/sipp/mailman/message/32849123/ and install libssl-dev
+						[ ] Ok, well now it tries, but times out which is new - no 401 response.
+					[ ] Let's view with ngrep (server) + ssip (laptop) at the same time. It is it doing what I expect?
+						[ ] Hm.. I am getting a 483 too many hops error. What appears to be happening is the message hits my public ip, gets routed to my private IP, then back to my public, then back to my private, and so on. Weird. I know the message is sent using 127.0.1.1 as the IP which points to my private IP in loopback, so that could be why..
+					[ ] I feel like there's nothing inherently wrong with my server and it's just a lack of control that's causing my issues. It might be worth just trying a simple app.
+			[ ] Ok, great, not realy making progress here either. On the one hand, I could pay a small fee for a container service as suggested on reddit, and use opensips without this public/private ip funniness. On the other hand, there are tutorials for Asterisk using a different linux distro on EC2. I'm going to try that. The goal, after all, is to get voice WORKING. Things like sip2sip are free but I have no control over downtime or whether I get cut off for excessive usage.
+				[ ] http://wiki.sip2sip.info/projects/sip2sip/wiki/SipTesting
+[ ] Ok, here's the plan now: the minimum functionality before I leave India must be
+	[ ] Ignore security and authentication for the screen sharing - voip + video + practical testing first.
+	[ ] Main screen where Thatha can pick available users. Large well separated pictures of users.
+		[ ] One way handwriting with dots + gloves shared at 1Hz and training
+		[ ] Stable audio over wifi-only, currently only to another android device
+		[ ] Large, clear notifications on call progress, failure, termination. Very obvious button to press to return to main screen at any time (either after failure or intentionally - e.g. hanging up) 
+		[ ] Erase button, and "IO problem" button, and MAIN button, all on side panel.  Make them a big eraser, a big ear, and a big red X.
+		[ ] Remote troubleshooting - like RDP (entirely controlled - app update, install, uninstall, etc.)
+	[ ] Partner app with screen share + voice, ACCEPT CALL & HANGUP button on our end, and display IO problem button. Only Thatha can call us, we can't call him. 
+	[ ] Logging on both ends of packet timings, so on. Exit after 5 minutes of touch inactivity. Return to main screen with presence info when call ends.
+	[ ] Small, RT streaming video is a nice to have, entirely controlled by one end (me, amma). Should be able to see both himself and the other party. 
+[ ] With this in mind, let's focus yet again on VoIP and getting it working robustly. This time let's try an Asterix Server which has been shown to easily handle EC2. If this too fails, we'll move onto a cloud service without NATting.
+	[ ] I'm going to wipe the current instance and start with a fresh Amazon AMI one
+	[ ] Unused Reference: http://www.geek-tips.com/2015/01/11/asterisk-on-aws-linux/
+	[ ] Following: http://marcelog.github.io/articles/webrtc_with_asterisk_without_webrtc2sip.html
+	[ ] Public hostname
+		[ ] ec2-54-215-239-126.us-west-1.compute.amazonaws.com
+	[ ] SSH
+		[ ] chmod 0600 test_boogie_voip.pem
+		[ ] ssh -i test_boogie_voip.pem ubuntu[[@ec2-54-215-239-126.us-west-1.compute.amazonaws.com]]
+
 
 [ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
 [ ] Should try for slow-updating video stills & hand-recognizing touches, authentication via the app, an emergency button that auto-dials a bunch of people with a prerecorded message after a timeout with a very audible/visible note to Thatha with the option to cancel. 
@@ -234,9 +307,6 @@ Here's the idea.
 
 [ ] Work on a basic http get app for the receiver as well (build for my phone)
 [ ] Add in VoIP demo to me alone
-
-[ ] Demo to Thatha with me, first, then Amma (web-only + actual phone, or Video Conference so he can see she can see).
-[ ] Observe and make notes on Thatha's usage patterns 
 
 [ ] Notes on ScreenMeet/doodle app
 	[ ] wow, that looked great, but it had up to 13 seconds delay from the tablet to the phone (i'm just assuming their servers are in USA, so it's a good estimate for my app too).
