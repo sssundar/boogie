@@ -273,7 +273,7 @@ Here's the idea.
 	[ ] Ignore security and authentication for the screen sharing - voip + video + practical testing first. Security (srtp, tls) can be added later. Security for handwriting even later. Maybe even integrated with SIP.
 	[ ] Main screen where Thatha can pick available users. Large well separated pictures of users.
 		[ ] One way handwriting with dots + gloves shared at 1Hz and training
-		[ ] Stable audio over wifi-only, currently only to another android device - loud sound
+		[ ] Stable audio over wifi-only, currently only to another android device - loud sound - TWO WAY CALLING
 		[ ] Large, clear notifications on call progress, failure, termination. Very obvious button to press to return to main screen at any time (either after failure or intentionally - e.g. hanging up) 
 			[ ] E.g. if internet is slow, or registration fails, etc.
 		[ ] Erase button, and "IO problem" button, and MAIN button, all on side panel.  Make them a big eraser, a big ear, and a big red X.
@@ -281,6 +281,12 @@ Here's the idea.
 	[ ] Partner app with screen share + voice, ACCEPT CALL & HANGUP button on our end, and display IO problem button. Only Thatha can call us, we can't call him. 
 	[ ] Logging on both ends of packet timings, so on. Exit after 5 minutes of touch inactivity. Return to main screen with presence info when call ends.
 	[ ] Small, RT streaming video is a nice to have, entirely controlled by one end (me, amma). Should be able to see both himself and the other party. 
+	[ ] **Ok, so the full system for rev-a will be: Wi-Fi, Headphone, Tablet, Stylus, Non-conductive Gloves (2 shirt-cotton layers thick).**
+		[ ] **You need to practice with Thatha in India + Norway**
+	[ ] **Rev -B can include features like a websocket app, video, security**
+	[ ] Rev -C can include** save-session, palm recognition, mobile data, emergency calling**
+	[ ] Rev -D can be ported to ioS so it's with the iPad with a larger screen, or to a tablet with mobile data so he can take it with him, and the server can be ported to my Raspberry Pi 2 permamently
+	[ ] **So tomorrow you're buying pans for Akka, headphones for Thatha, and gloves for Thatha - take the tablet and stylus with you, and if the store has wifi, test the headset there itself (or at least listen to music from your phone or a video)**
 [ ] With this in mind, let's focus yet again on VoIP and getting it working robustly. This time let's try an Asterix Server which has been shown to easily handle EC2. If this too fails, we'll move onto a cloud service without NATting.
 	[ ] I'm going to wipe the current instance and start with a fresh Ubunti Server one
 	[ ] Public hostname
@@ -330,13 +336,43 @@ Here's the idea.
 				[ ] I really just want to HEAR a call on this. 
 				[ ] Some debug help:http://community.freepbx.org/t/freepbx-new-install-no-audio-in-or-out-ivr-audio-works/16578/15, e.g. how to access asterisk CLI via ssh
 				[ ] Definitely seeing random traffic from unknown users
-				[ ] WOW. It works fine (audio) now. The real issue appears to have been local network settings - in FreePBX general SIP settings, I had to use IFCONFIG under SSH to find the proper subnet. Then it just started working. Wow. Call quality is decent - volume is fine, that can be boosted, or speakers can be bought, but there is little echo and there is little distortion. Periamma heard my voice fine, and I heard hers, but Thatha had a hard time hearing the sound on my cell phone. 
+				[*] WOW. It works fine (audio) now. The real issue appears to have been local network settings - in FreePBX general SIP settings, I had to use IFCONFIG under SSH to find the proper subnet. Then it just started working. Wow. Call quality is decent - volume is fine, that can be boosted, or speakers can be bought, but there is little echo and there is little distortion. Periamma heard my voice fine, and I heard hers, but Thatha had a hard time hearing the sound on my cell phone. 
 					[ ] http://www.expressinterconnect.com/429/no-outgoing-sound-for-asterisk-on-amazon-aws-ec2/
-				[ ] So now I can just leave the server running. I'm pretty sure there's no security, no encryption, but it'll have to do for now. 
-	[ ] Next step is: get android apps talking (nexus -> huawei). We'll deal with websocket for Amma (now) and Balu mama (later) down the road.
+				[*] So now I can just leave the server running. I'm pretty sure there's no security, no encryption, but it'll have to do for now. 
+				[*] Whoops - definite ECHO. TODO = DEAL WITH THIS.
+					[ ] Headphones are a must now - Thatha can't be expected to deal with a powered speaker & it's going to trail around
+					[ ] Get him headphones and he'll hear better (he doesn't always need his hearing aids to listen to me)
+					[ ] Also it'll decrease echo which Amma complained about even on Skype, and Periamma complained about
+					[ ] Let's go with Thatha to a store here and pick one out that he finds comfortable - see what fits over his ear. Purchase online if it is too expensive in store.
+						[ ] You need this FAST. Get it in the store if you can. Hang the cost.
+[ ] Next step is: get android apps talking (nexus -> huawei). 
+	[ ] Ok. SIP on Android! 
+	[ ] First pass: click a button, call tablet TO huawei
+		[ ] Due: Friday by 1 AM
+	[ ] Second pass: two way calling (click button, expand to 135', 180' users online (me, amma) with pictures), accept dialog (pick up | hang up), connection error notifications (timed toasts), and hang up in-call. 
+		[ ] Due: Saturday by noon
+	[ ] Then, purchasing for full system testing
+	[ ] Third pass: integrate screen capture and try and send encoded text over TCP using SIP messaging.
+		[ ] Due: Saturday by 7 PM
+	[ ] Fourth pass: remote troubleshooting & update - test BEFORE leaving 
+		[ ] Due: Sunday by 7 PM
+	[ ] Full-system testing till I leave. No more features, 
+		[ ] Aim for at least three calls over an hour each day for the last four days
+		[ ] Due Wednesday by 7 PM
+	[ ] Then spend at least one hour practicing with Patti on the tablet, for the last five days
+		[ ] Focus rest of time on speech therapy, talking to Thatha/Patti/Periamma, and prepping for departure/Norway.
+			[ ] Due Wednesday by 7 PM
+		[ ] Have a clear plan for Norway & start organizing targets once you return home. Have goals for each. 
+			[ ] Due Wednesday by 7 PM
+		[ ] Check the rest of the goals, organize into Revs, and plan out Norway time between this, Thatha's emergency wristband, and the Arduino, and cooking/playing with Akka, and speccing electronics for Amma so we can test her calls to Thatha asap, etc.
+			[ ] Due Wednesday by 7 PM
+
+
+[ ] First pass: click a button, call tablet TO huawei
 
 
 [ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
+[ ] Ignoring voice echo for now. 
 [ ] Should try for slow-updating video stills & hand-recognizing touches, authentication via the app, an emergency button that auto-dials a bunch of people with a prerecorded message after a timeout with a very audible/visible note to Thatha with the option to cancel. 
 [ ] Etc. - "can't hear," "can't see," etc. with pings to ME
 [ ] For now, focus on Skype voice. It's annoying to get it working within the same router subnet so use a phone in each house to get this tested. JUST VOICE - Intents, etc. But get sound across in real time.
