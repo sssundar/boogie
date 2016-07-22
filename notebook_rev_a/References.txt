@@ -93,5 +93,18 @@ Created Friday 01 July 2016
 
 79. http://wiki.sip2sip.info/projects/sip2sip/wiki/SipTesting
 80. http://www.geek-tips.com/2015/01/11/asterisk-on-aws-linux/
+
 81. http://marcelog.github.io/articles/webrtc_with_asterisk_without_webrtc2sip.html
+82. http://marcelog.github.io/articles/install_daemon_tools_centos_amazon_linux.html
+
+83. http://wiki.freepbx.org/display/FOP/Installing+FreePBX+13+on+Ubuntu+Server+14.04.2+LTS#InstallingFreePBX13onUbuntuServer14.04.2LTS-DownloadandinstallFreePBX.
+84. https://wiki.asterisk.org/wiki/display/AST/Secure+Calling+Tutorial
+85. https://gist.github.com/KhasMek/a4e3c11b7b453095c0d0#file-amazon_ec2_freepbx_bootstrap-sh
+86. http://wiki.freepbx.org/display/PPS/FreePBX+Distro+First+Steps+After+Installation
+87. http://aliensgrin.com/2014/01/20/pbx-in-a-flash-piaf-on-amazon-ec2/
+88. https://wiki.asterisk.org/wiki/display/AST/Unable+to+connect+to+remote+Asterisk
+89. http://wiki.freepbx.org/display/FPG/Extensions+Module+-+SIP+Extension#ExtensionsModule-SIPExtension-Overview
+90. https://wiki.asterisk.org/wiki/display/AST/Creating+SIP+Accounts
+91. https://support.flowroute.com/customer/en/portal/articles/2121271-how-to-advertise-your-public-ip-in-your-sip-signaling-on-asterisk-based-pbxs
+92. http://www.expressinterconnect.com/429/no-outgoing-sound-for-asterisk-on-amazon-aws-ec2/
 

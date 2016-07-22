@@ -270,25 +270,70 @@ Here's the idea.
 			[ ] Ok, great, not realy making progress here either. On the one hand, I could pay a small fee for a container service as suggested on reddit, and use opensips without this public/private ip funniness. On the other hand, there are tutorials for Asterisk using a different linux distro on EC2. I'm going to try that. The goal, after all, is to get voice WORKING. Things like sip2sip are free but I have no control over downtime or whether I get cut off for excessive usage.
 				[ ] http://wiki.sip2sip.info/projects/sip2sip/wiki/SipTesting
 [ ] Ok, here's the plan now: the minimum functionality before I leave India must be
-	[ ] Ignore security and authentication for the screen sharing - voip + video + practical testing first.
+	[ ] Ignore security and authentication for the screen sharing - voip + video + practical testing first. Security (srtp, tls) can be added later. Security for handwriting even later. Maybe even integrated with SIP.
 	[ ] Main screen where Thatha can pick available users. Large well separated pictures of users.
 		[ ] One way handwriting with dots + gloves shared at 1Hz and training
-		[ ] Stable audio over wifi-only, currently only to another android device
+		[ ] Stable audio over wifi-only, currently only to another android device - loud sound
 		[ ] Large, clear notifications on call progress, failure, termination. Very obvious button to press to return to main screen at any time (either after failure or intentionally - e.g. hanging up) 
+			[ ] E.g. if internet is slow, or registration fails, etc.
 		[ ] Erase button, and "IO problem" button, and MAIN button, all on side panel.  Make them a big eraser, a big ear, and a big red X.
 		[ ] Remote troubleshooting - like RDP (entirely controlled - app update, install, uninstall, etc.)
 	[ ] Partner app with screen share + voice, ACCEPT CALL & HANGUP button on our end, and display IO problem button. Only Thatha can call us, we can't call him. 
 	[ ] Logging on both ends of packet timings, so on. Exit after 5 minutes of touch inactivity. Return to main screen with presence info when call ends.
 	[ ] Small, RT streaming video is a nice to have, entirely controlled by one end (me, amma). Should be able to see both himself and the other party. 
 [ ] With this in mind, let's focus yet again on VoIP and getting it working robustly. This time let's try an Asterix Server which has been shown to easily handle EC2. If this too fails, we'll move onto a cloud service without NATting.
-	[ ] I'm going to wipe the current instance and start with a fresh Amazon AMI one
-	[ ] Unused Reference: http://www.geek-tips.com/2015/01/11/asterisk-on-aws-linux/
-	[ ] Following: http://marcelog.github.io/articles/webrtc_with_asterisk_without_webrtc2sip.html
+	[ ] I'm going to wipe the current instance and start with a fresh Ubunti Server one
 	[ ] Public hostname
-		[ ] ec2-54-215-239-126.us-west-1.compute.amazonaws.com
+		[ ] ec2-54-183-116-184.us-west-1.compute.amazonaws.com
+	[ ] Private hostname
+		[ ] ip-172-31-3-160.us-west-1.compute.internal
 	[ ] SSH
-		[ ] chmod 0600 test_boogie_voip.pem
-		[ ] ssh -i test_boogie_voip.pem ubuntu[[@ec2-54-215-239-126.us-west-1.compute.amazonaws.com]]
+		[ ] sudo chmo 400 test_voip.pem
+		[ ] ssh -i test_voip.pem ubuntu[[@ec2-54-183-116-184.us-west-1.compute.amazonaws.com]]
+	[ ] Gosh darn it. Let's just use http://wiki.freepbx.org/display/FOP/Installing+FreePBX+13+on+Ubuntu+Server+14.04.2+LTS#InstallingFreePBX13onUbuntuServer14.04.2LTS-CompileandInstalljansson
+		[ ] That's on Ubuntu 14.04 and appears current wrt dependencies. Buti it's not for AWS
+		[ ] Use http://www.geek-tips.com/2015/01/11/asterisk-on-aws-linux/ for tips on AWS setup
+	[ ] Wow, someone posted a script to set it up on a fresh Ubuntu instance on AWS. 
+		[ ] See https://gist.github.com/KhasMek/a4e3c11b7b453095c0d0#file-amazon_ec2_freepbx_bootstrap-sh
+	[ ] Great. But a massive installation script makes ssh unhappy - it times out. So we'll do it one at a time.
+		[ ] On boot, FreePBX starts, but Asterisk doesn't. So I have to SSH in and type "asterisk" to start the daemon, then things work fine.
+		[ ] Bunch of ports are not open - need to change security groups on EC2 settings.
+		[ ] http://wiki.freepbx.org/display/PPS/FreePBX+Distro+First+Steps+After+Installation
+		[ ] http://aliensgrin.com/2014/01/20/pbx-in-a-flash-piaf-on-amazon-ec2/
+		[ ] https://wiki.asterisk.org/wiki/display/AST/Unable+to+connect+to+remote+Asterisk
+		[ ] http://wiki.freepbx.org/display/FPG/STUN+Servers
+		[ ] http://wiki.freepbx.org/display/FPG/Extensions+Module+-+SIP+Extension#ExtensionsModule-SIPExtension-Overview
+		[ ] Ok, well, the server is up, now I need to test whether it's getting responses, what the error codes are, etc.
+			[ ] I've set up two users, sush & mani, with secure passwords, and extensions using FreePBX.
+			[ ] Next step is to check the Asterisk config files for Chan-SIP to see what it thinks the user/pwd should be.
+			[ ] https://wiki.asterisk.org/wiki/display/AST/Creating+SIP+Accounts
+			[ ] Ok, the server is seeing the pings from my phone but it is responding with "wrong password." But I copy pasted the extension password..
+			[ ] No success yet, but now it's clear that setting up a sip extension and linking it to a user account is how to register a sip softphone. Therefore the extension = username in linphone + the password is the "secret." This should work. 
+			[ ] The problem currently is my internet keeps dying. ping -c 2 google.com fails intermittently. Now it's working again. 
+			[ ] sipp [[@ec2-54-183-116-184.us-west-1.compute.amazonaws.com|ec2-54-183-116-184.us-west-1.compute.amazonaws.com]]:5060 -sf REGISTER_client.xml -inf REGISTER_client.csv -m 1 -l 1 -trace_msg -trace_err 
+			[ ] Ok, well, changed local IP settings since they're static for ec2 instances anyways. 
+			[ ] Restarted asterisk service after: https://support.flowroute.com/customer/en/portal/articles/2121271-how-to-advertise-your-public-ip-in-your-sip-signaling-on-asterisk-based-pbxs
+			[ ] Ok, well, SIPp says it can register successfully with my credentials [[(extension:pwd]]) so I don't see what LinPhone's problem is. I do notice for each registration event I get a message from the server's private IP which has unknown credentials, so that's weird. The SIPp test discards them and considers them errors.
+			[ ] Well, it seems I send a message, get a 401 unauthorized, get a message with options (from no known call + the private IP), then send another message & get a 200 OK.
+			[ ] Ok, I'm happy with this. Why isn't LinPhone? Screw it, I trust SIPp - the messages look reasonable. But I want to test voice to make sure known SIP clients are able to hear both ways - that's important. Let's try a different SIP client - Twinkle! Nope - known issues for me, found online too. Trying QuteCom in the repo.
+				[ ] Wooh! I am now reachable. So it was the client. Sheesh. 
+				[ ] Ok, let's get two of these running and see if a call goes through and what voice quality is like with KNOWN O(250 ms) latency each way to the EC2 server from India (http://www.cloudping.info/)
+				[ ] Trying QuteCom on Linux Miny 17, 32 bit laptop (me) and CSipSimple on Android 5.1 smartphone (thatha)
+					[ ] CSipSimple works too!! Both users are registered. Both users are reachable according to server. Didn't even need to enable STUN for the phone, but have now, and let's see if I stay registered. Yes, it's fine.
+				[ ] Ok, I'm able to signal "busy" after an invite from the PHONE CALLING THE LAPTOP and the other way around. So signaling is working fine.
+				[ ] Strangely when the laptop calls the phone, the ip address shows up as the private ip address of the server, not it's public address.
+				[ ] However, if I try and connect the call, the logs show 20s+ timeouts, and eventually the phones disconnect with a 408 timeout error.
+				[ ] Hm.. well, let's try using IP address as if they were static. http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-instance-addressing.html
+				[ ] Hm. Every once in a while, it seems asterisk.ctl is deleted and recreated with the wrong settings and then FreePBX can't change the settings through the GUI. Oh well. 
+				[ ] Ok, now I can't even ssh in. I think the upshot here is that while it'd be great to have so much control over how the call is started/ended, it's not worth the hassle and it's not leading to a robust solution in my hands in the timeframe allotted. So time to pull the plug and try Skype. I'm killing the instance.
+				[ ] Oh, it's back up. Weird.
+				[ ] I really just want to HEAR a call on this. 
+				[ ] Some debug help:http://community.freepbx.org/t/freepbx-new-install-no-audio-in-or-out-ivr-audio-works/16578/15, e.g. how to access asterisk CLI via ssh
+				[ ] Definitely seeing random traffic from unknown users
+				[ ] WOW. It works fine (audio) now. The real issue appears to have been local network settings - in FreePBX general SIP settings, I had to use IFCONFIG under SSH to find the proper subnet. Then it just started working. Wow. Call quality is decent - volume is fine, that can be boosted, or speakers can be bought, but there is little echo and there is little distortion. Periamma heard my voice fine, and I heard hers, but Thatha had a hard time hearing the sound on my cell phone. 
+					[ ] http://www.expressinterconnect.com/429/no-outgoing-sound-for-asterisk-on-amazon-aws-ec2/
+				[ ] So now I can just leave the server running. I'm pretty sure there's no security, no encryption, but it'll have to do for now. 
+	[ ] Next step is: get android apps talking (nexus -> huawei). We'll deal with websocket for Amma (now) and Balu mama (later) down the road.
 
 
 [ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
