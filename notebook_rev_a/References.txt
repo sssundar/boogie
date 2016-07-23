@@ -114,6 +114,7 @@ Created Friday 01 July 2016
 96. showDialog replaced by simply returning the AlertBuilder.Dialog + .show() 
 97. http://stackoverflow.com/questions/32116484/error-while-changing-api-level-from-23-to-22
 98. http://stackoverflow.com/questions/26615889/how-to-change-the-launcher-logo-of-an-app-in-android-studio
+99. https://developer.android.com/training/system-ui/immersive.html
 
 
 

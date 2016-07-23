@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">Boogie</string>
+    <string name="erase">Erase the screen</string>
+    <string name="call_issue">It is hard to hear your voice</string>
+    <string name="call_amma">Calling Sudha</string>
+    <string name="call_balu">Calling Balu</string>
+    <string name="call_sush">Calling Sushant</string>
+    <string name="call_mani">Calling Appa</string>
+    <string name="end_call">Hanging up the phone</string>
+    <string name="patience">Please be patient</string>
 </resources>

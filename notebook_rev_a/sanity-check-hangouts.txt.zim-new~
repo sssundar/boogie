@@ -421,7 +421,9 @@ Here's the idea.
 		[*] Build the app, and test with different flags settings to see what UI looks like (for now keep pics there regardless of presence (not yet detected)
 	[ ] Third step
 		[ ] A
-			[ ] Set up SIP registration & presence & call and test presence subscription with SIP 
+			[ ] Set up SIP registration
+			[ ] User log in hard-coded but NOT committed.
+			[ ] & presence & call and test presence subscription with SIP 
 		[ ] B
 			[ ] Only broadcast presence if the app has focus. Otherwise odds are Thatha won't see it. Don't bother with notifications and the like.
 			[ ] Run SIP in a background thread with AUDIO priority and see what quality is like. Have presence run in a different background thread. Have the main UI thread coordinate shutdown of threads as appropriate (e.g. SIP call shuts down at call termination, but SIP presence only shuts down on app termination, and drawing sampler/sip transmitter shuts down if a sip call has an issue).
@@ -473,34 +475,4 @@ Here's the idea.
 
 [ ] Issues noted with drawing so far:
 	[ ] Sound is VERY low - how's VoIP going to work? Get an app.. but then need one with an API, or set it up and make sure they know not to mess with it.
-	[ ] Perhaps an indexing method (diff, unique id, and handshake) will make sure thatha doesn't erase early. It might also lower spurious updates. Perhaps the webserver is having timing issues too, and this will help resolve them (don't send unnecessarily if nothing has changed). 
-	[ ] Be careful to use solid/striped or something other than red/green as colors are hard to tell apart I bet as we get older.
-	[ ] DISABLE auto-turn off when this app is on!! 
-	[ ] Don't check for connectivity. What happens if I don't have it?
-	[ ] Timing on the transmits - is it actually finishing the thread run() in 1 second or less?
-	[ ] What happens to the server if I pass in bad JSON or a string without the necessary field?
-	[ ] Home, Switch buttons are fine, don't erase drawing. Back button erases drawing. Probably too much of a pain to remove them.
-	[ ] Might want to move erase button to top so Thatha has no chance of accidentally bringing in notification screen and exiting out. Try it with him.
-	[ ] Line width is fine. Dots are a bit difficult. Should see if he gets used to it. 
-	[ ] Even with hand resting against tablet, because screen doesn't go to edges, no push factor here. Especially snce he's right handed.
-	[ ] Disable back button.
-[ ] Don't know what this does to size of the message. Need to check Amazon EC2 usage, and can also store logs of this sort of information on the server - timing between observed requests, and classification of the requests to see if even the server sees loss or overlap or other weird timing.
-[ ] Putting unique indexes (large, large wrapping #) on these messages may help order them so they can be displayed well despite the slow update. I can also have talkback so the app knows if its message has been received by Amma.
-
-[ ] Aesthetics - usability - home buttons, see how Thatha uses the tablet, make it easier for his use. How to avoid recognizing his hand pressure as a press in the doodle? Look for open-source doodle code with APIs if possible to grab the screen..
-[ ] Remote control of Tablet - Remote Update of App - App without Developer Mode
-[ ] Flashing light to say "sent" so Thatha knows when he can clear - and send before clear so it's on record. Allow scrolling of saved sessions in real time so Amma can review notes.
-[ ] Add in VoIP to Amma, Balu mama, Vikram, Suman, ... 
-[ ] Make VoIP optional in case of low bandwidth
-[ ] Add save-session features for client app?
-[ ] Webserver security & authentication
-	[ ] Size limits on post data
-	[ ] Post, not put, as otherwise RLE images stored in browser..
-[ ] Cleanup last file so no local data exists on server.
-[ ] Look into RPi2 webserver hosting & port forwarding, and network monitoring for security. 
-
-
-
-
-
-
+	[ ] Perhaps an indexing method (diff, unique id, and handshake) will make sure thatha doesn't erase early. It might also lower spuri
