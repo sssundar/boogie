@@ -378,7 +378,51 @@ Here's the idea.
 	[ ] Committed to git!
 
 [ ] Second pass: two way calling with UI (click button, expand to 135', 180' users online (me, amma) with pictures), accept dialog (pick up | hang up), connection error notifications (timed toasts), and hang up in-call. 
-
+	[ ] UI Breakdown (Source, ThaTha)
+		[ ] Main screen is a near-fullscreen activity with the home buttons, in portrait orientation (fixed)
+		[ ] At the left are the home buttons
+		[ ] The entire center is the drawing view of the boogie app - currently it will allow draw/erase but not do anything with that data
+		[ ] At the right is a vertical panel with the erase button (top), can't hear button (causes a message on the other side, toast, to say hang up and try again), and call-select/hang up ongoing call button.
+		[ ] Call select should expand out to a 90/135/180 degree spread of people who are online. Currently it will only show extension 4000 (sush) but it will eventually show 4002 (amma) and 4003 (bala) too.
+		[ ] On network errors, end ongoing calls, freeze, display a dialog, and don't resume allowing inputs till the network restores.
+		[ ] On remote network connections lost (e.g. if the presence is lost due to a network error on the other end), end the call, display a dialog, and return to the main screen on button press.
+		[ ] On incoming calls, allow the user to PICK UP or HANG UP
+		[ ] On outgoing calls, show a 'calling dialog' with the option to hang up, till the other user actually picks up
+		[ ] In the middle of an call do not allow other calls. 
+		[ ] User log in hard-coded but NOT committed.
+		[ ] Run SIP and screenshare in a background thread with high priority and see what voice quality is like.
+			[ ] Kill app and all threads upon 20 minutes of having no active call
+		[ ] Register every 120 seconds or until a network error occurs/is resolved.
+	[ ] UI Breakdown (Receiver, me) 
+		[ ] The app is the same, basically, but with a flag set so the main screen is populated by a background thread that listens for sip communications with a specific flag when an active call is up (or is blank otherwise)
+		[ ] The online users presence is only polled for Thatha - they can only call Thatha - this is set by a flag as well
+		[ ] They cannot erase or send a 'bad call quality' message so these are disabled by flags as well
+		[ ] They can receive a bad call quality message, though, as a toast.
+	[ ] Then to build the two apps I just need to set the credentials, set a few flags, build the APK, and deploy, then wipe the credentials before further commits.
+	[ ] First Step
+		[ ] Get main layouts from boogie source-rev-a app including hardware and permissions manifests (from SIP demo too)
+		[*] Need APP icon - a tablet/boogie board. Done.
+		[*] Need eraser, ear, my/amma/balu/thatha images, and a red closed phone & a green open phone. Used Google Images + GIMP to create 200x200 .pngs
+		[ ] http://stackoverflow.com/questions/26615889/how-to-change-the-launcher-logo-of-an-app-in-android-studio
+	[ ] Second Step
+		[ ] Get buttons that do nothing but which can be enabled/disabled by flags. Create icons. Use black background. 
+	[ ] Third step
+		[ ] Set up SIP registration & presence & call and test presence subscription with SIP 
+		[ ] Run SIP in a background thread with AUDIO priority and see what quality is like
+		[ ] User log in hard-coded but NOT committed.
+		[ ] Register and every 5 minutes, and demonstrate presence every 30 seconds, unless a network error occurs/is resolved.
+		[ ] Test with toasts
+	[ ] Fourth Step
+		[ ] The call button can just be three predefined places for Amma, Balu, and me, and in-call turn into a hang-up icon. Have it show up based on presence info. Calls should check for presence and update this listing by local flags.
+	[ ] Fifth Step
+		[ ] On incoming calls, allow the user to PICK UP or HANG UP
+		[ ] On outgoing calls, show a 'calling dialog' with the option to hang up, till the other user actually picks up
+		[ ] In the middle of an call do not allow other calls. 
+	[ ] Sixth Step
+		[ ] On network errors, end ongoing calls, freeze, display a dialog, and don't resume allowing inputs till the network restores.
+		[ ] On remote network connections lost (e.g. if the presence is lost due to a network error on the other end), end the call, display a dialog, and return to the main screen on button press.
+	[ ] Seventh Step
+		[ ] Kill app and all threads upon 20 minutes of having no active call
 
 
 [ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
