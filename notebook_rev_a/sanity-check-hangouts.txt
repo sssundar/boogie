@@ -269,24 +269,7 @@ Here's the idea.
 					[ ] I feel like there's nothing inherently wrong with my server and it's just a lack of control that's causing my issues. It might be worth just trying a simple app.
 			[ ] Ok, great, not realy making progress here either. On the one hand, I could pay a small fee for a container service as suggested on reddit, and use opensips without this public/private ip funniness. On the other hand, there are tutorials for Asterisk using a different linux distro on EC2. I'm going to try that. The goal, after all, is to get voice WORKING. Things like sip2sip are free but I have no control over downtime or whether I get cut off for excessive usage.
 				[ ] http://wiki.sip2sip.info/projects/sip2sip/wiki/SipTesting
-[ ] Ok, here's the plan now: the minimum functionality before I leave India must be
-	[ ] Ignore security and authentication for the screen sharing - voip + video + practical testing first. Security (srtp, tls) can be added later. Security for handwriting even later. Maybe even integrated with SIP.
-	[ ] Main screen where Thatha can pick available users. Large well separated pictures of users.
-		[ ] One way handwriting with dots + gloves shared at 1Hz and training
-		[ ] Stable audio over wifi-only, currently only to another android device - loud sound - TWO WAY CALLING
-		[ ] Large, clear notifications on call progress, failure, termination. Very obvious button to press to return to main screen at any time (either after failure or intentionally - e.g. hanging up) 
-			[ ] E.g. if internet is slow, or registration fails, etc.
-		[ ] Erase button, and "IO problem" button, and MAIN button, all on side panel.  Make them a big eraser, a big ear, and a big red X.
-		[ ] Remote troubleshooting - like RDP (entirely controlled - app update, install, uninstall, etc.)
-	[ ] Partner app with screen share + voice, ACCEPT CALL & HANGUP button on our end, and display IO problem button. Only Thatha can call us, we can't call him. 
-	[ ] Logging on both ends of packet timings, so on. Exit after 5 minutes of touch inactivity. Return to main screen with presence info when call ends.
-	[ ] Small, RT streaming video is a nice to have, entirely controlled by one end (me, amma). Should be able to see both himself and the other party. 
-	[ ] **Ok, so the full system for rev-a will be: Wi-Fi, Headphone, Tablet, Stylus, Non-conductive Gloves (2 shirt-cotton layers thick).**
-		[ ] **You need to practice with Thatha in India + Norway**
-	[ ] **Rev -B can include features like a websocket app, video, security**
-	[ ] Rev -C can include** save-session, palm recognition, mobile data, emergency calling**
-	[ ] Rev -D can be ported to ioS so it's with the iPad with a larger screen, or to a tablet with mobile data so he can take it with him, and the server can be ported to my Raspberry Pi 2 permamently
-	[ ] **So tomorrow you're buying pans for Akka, headphones for Thatha, and gloves for Thatha - take the tablet and stylus with you, and if the store has wifi, test the headset there itself (or at least listen to music from your phone or a video)**
+
 [ ] With this in mind, let's focus yet again on VoIP and getting it working robustly. This time let's try an Asterix Server which has been shown to easily handle EC2. If this too fails, we'll move onto a cloud service without NATting.
 	[ ] I'm going to wipe the current instance and start with a fresh Ubunti Server one
 	[ ] Public hostname
@@ -346,21 +329,25 @@ Here's the idea.
 					[ ] Let's go with Thatha to a store here and pick one out that he finds comfortable - see what fits over his ear. Purchase online if it is too expensive in store.
 						[ ] You need this FAST. Get it in the store if you can. Hang the cost.
 [ ] Next step is: get android apps talking (nexus -> huawei). 
-	[ ] Ok. SIP on Android! 
-	[ ] First pass: click a button, call tablet TO huawei
-		[ ] Due: Friday by 1 AM
-	[ ] Second pass: two way calling (click button, expand to 135', 180' users online (me, amma) with pictures), accept dialog (pick up | hang up), connection error notifications (timed toasts), and hang up in-call. 
-		[ ] Due: Saturday by noon
-	[ ] Then, purchasing for full system testing
+	[*] First pass: implement SipDemo (ported to Android 22) 
+		[ ] Test in different wireless subnets
+		[x] Due: Saturday at 10 AM
+		[*] Done: Saturday at 11:30 AM
+	[ ] Second pass: two way calling with UI (click button, expand to 135', 180' users online (me, amma) with pictures), accept dialog (pick up | hang up), connection error notifications (timed toasts), and hang up in-call. 
+		[ ] Due: Saturday by 1 PM
+	[ ] Then, purchasing for full system testing (headphones, gloves) for about 2 hours + pans for akka + send amma vids of home + scans of greencard for patti
 	[ ] Third pass: integrate screen capture and try and send encoded text over TCP using SIP messaging.
+		[ ] Including dot-capture instead of only path capture
 		[ ] Due: Saturday by 7 PM
-	[ ] Fourth pass: remote troubleshooting & update - test BEFORE leaving 
-		[ ] Due: Sunday by 7 PM
-	[ ] Full-system testing till I leave. No more features, 
+	[ ] Fourth pass: remote troubleshooting & update - test BEFORE leaving.  
+		[ ] Due: Saturday by midnight
+	[ ] Fifth pass: websocket support + simple app for immediate relevance (amma-thatha)
+		[ ] Due Sunday by 5 PM
+	[ ] Full-system testing till I leave. No more features after Sunday afternoon.
 		[ ] Aim for at least three calls over an hour each day for the last four days
-		[ ] Due Wednesday by 7 PM
+		[ ] Monday-Wednesday morning (their evening)
 	[ ] Then spend at least one hour practicing with Patti on the tablet, for the last five days
-		[ ] Focus rest of time on speech therapy, talking to Thatha/Patti/Periamma, and prepping for departure/Norway.
+		[ ] Focus rest of time on speech therapy, talking to Thatha/Patti/Periamma/Aadith, and prepping for departure/Norway.
 			[ ] Due Wednesday by 7 PM
 		[ ] Have a clear plan for Norway & start organizing targets once you return home. Have goals for each. 
 			[ ] Due Wednesday by 7 PM
@@ -368,7 +355,30 @@ Here's the idea.
 			[ ] Due Wednesday by 7 PM
 
 
-[ ] First pass: click a button, call tablet TO huawei
+[*] First pass: click a button, call tablet TO huawei
+	[ ] Well, the SipDemo from 2010 has been ported and registers fine. 
+	[ ] Noticing a single IP address has been pinging my server trying to register with various extensions all through the night. Should set up a bit of security there.
+	[ ] **Noticed cannot register in QuteCom through Wifi2 - only Wifi1 in Patti's house. So router settings matter! Interesting.** 
+	[ ] Ok, call goes through to QuteCom on same network - but noticing significant (2 second) delay between call start -> receive relative to CSipSimple.
+		[ ] Nah, not the second time. Also, can receive calls!
+		[ ] But no clear audio as yet going through - though we did get into feedback once.
+	[ ] Also noticing when internet fails there's a registration failure and Thatha needs to know the internet is wonky otherwise he'll get annoyed (like me)
+	[ ] Ok, current demo logcat in Android Studio says we're skipping frames, need to shift a lot of this to a background thread.
+	[ ] Ok, well, I can register on Home Wifi (a different router) and Wifi1_ext but not Wifi2. Interestinger. 
+	[ ] On the FreePBX Asterisk logs I'm seeing for my failed call data coming in at port 39000 so I guess I should extend my UDP ports a bit, or try and force a port for these calls. 
+	[ ] Ok, extending ports to 10000-65000 in EC2 firewall and FreePBX config and see what happens.
+	[ ] Ok, that worked. Problem now is, TONS of echo, even with headphones. Definite feedback. Pretty shitty audio quality.
+	[ ] Let's try with two android devices in separate rooms. Generating the APK.
+		[ ] Just email it to each and install as unknown source for testing
+		[ ] Ok, on two different wifi networks, FreePBX is showing the same IP with different port numbers and sound quality is clear. For lack of echo NEED headphones for both sides unless I want to do processing on board - which makes more sense actually.
+		[ ] Call stayed connected for quite some time. Apart from registration issues which didn't seem to affect the call, all was well.
+		[ ] This is a good lead: https://developer.android.com/reference/android/media/audiofx/AcousticEchoCanceler.html
+		[ ] Uh oh. Android is TRYING. Just not doing so well. So I guess it's either headphones on either end, or roll your own. I'll go with headphones for now - both parties will have them.
+	[ ] The basic idea is sound. For now, in the interest of training Thatha while I am here, I need to move forward. In the future it might be better to use Skype or something. I know there are free SIP proxies out there. No idea why I tried to build my own other than.. those impose limits but I don't expect Thatha to go past them.
+	[ ] Committed to git!
+
+[ ] Second pass: two way calling with UI (click button, expand to 135', 180' users online (me, amma) with pictures), accept dialog (pick up | hang up), connection error notifications (timed toasts), and hang up in-call. 
+
 
 
 [ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard

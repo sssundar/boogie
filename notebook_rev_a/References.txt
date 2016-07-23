@@ -108,3 +108,11 @@ Created Friday 01 July 2016
 91. https://support.flowroute.com/customer/en/portal/articles/2121271-how-to-advertise-your-public-ip-in-your-sip-signaling-on-asterisk-based-pbxs
 92. http://www.expressinterconnect.com/429/no-outgoing-sound-for-asterisk-on-amazon-aws-ec2/
 
+93. https://developer.android.com/guide/topics/connectivity/sip.html
+94. https://developer.android.com/samples/index.html
+95. https://github.com/android/platform_development/tree/master/samples/SipDemo
+96. showDialog replaced by simply returning the AlertBuilder.Dialog + .show() 
+97. http://stackoverflow.com/questions/32116484/error-while-changing-api-level-from-23-to-22
+
+
+

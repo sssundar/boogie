@@ -1,0 +1,27 @@
+Content-Type: text/x-zim-wiki
+Wiki-Format: zim 0.4
+Creation-Date: 2016-07-23T11:33:51+06:00
+
+====== Rev Goals ======
+Created Saturday 23 July 2016
+
+[ ] Ok, here's the plan now: the minimum functionality before I leave India must be
+	[ ] Ignore security and authentication for the screen sharing - voip + video + practical testing first. Security (srtp, tls) can be added later. Security for handwriting even later. Maybe even integrated with SIP.
+	[ ] Main screen where Thatha can pick available users. Large well separated pictures of users.
+		[ ] One way handwriting with dots + gloves shared at 1Hz and training
+		[ ] Stable audio over wifi-only, currently only to another android device - loud sound - TWO WAY CALLING
+		[ ] Large, clear notifications on call progress, failure, termination. Very obvious button to press to return to main screen at any time (either after failure or intentionally - e.g. hanging up) 
+			[ ] E.g. if internet is slow, or registration fails, etc.
+		[ ] Erase button, and "IO problem" button, and MAIN button, all on side panel.  Make them a big eraser, a big ear, and a big red X.
+		[ ] Remote troubleshooting - like RDP (entirely controlled - app update, install, uninstall, etc.)
+	[ ] Partner app with screen share + voice, ACCEPT CALL & HANGUP button on our end, and display IO problem button. Only Thatha can call us, we can't call him. 
+	[ ] Logging on both ends of packet timings, so on. Exit after 5 minutes of touch inactivity. Return to main screen with presence info when call ends.
+	[ ] Small, RT streaming video is a nice to have, entirely controlled by one end (me, amma). Should be able to see both himself and the other party. 
+	[ ] **Ok, so the full system for rev-a will be: Wi-Fi, Headphone, Tablet, Stylus, Non-conductive Gloves (2 shirt-cotton layers thick).**
+		[ ] **You need to practice with Thatha in India + Norway**
+		[ ] **Require headphones on both sides to stop echo.**
+	[ ] **Rev -B can include features like a websocket app, video, security (setting up fail2ban on freepbx, tls, srtp)**
+	[ ] Rev -C can include** save-session, palm recognition, mobile data, emergency calling, adaptive echo cancelation**
+	[ ] Rev -D can be ported to ioS so it's with the iPad with a larger screen, or to a tablet with mobile data so he can take it with him, and the server can be ported to my Raspberry Pi 2 permamently
+	[ ] **So tomorrow you're buying pans for Akka, headphones for Thatha, and gloves for Thatha - take the tablet and stylus with you, and if the store has wifi, test the headset there itself (or at least listen to music from your phone or a video)**
+	[ ] At some point you need to buy headphones for Amma too.
