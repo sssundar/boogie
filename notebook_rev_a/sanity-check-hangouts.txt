@@ -348,6 +348,7 @@ Here's the idea.
 		[ ] Due Sunday by 5 PM
 	[ ] Full-system testing till I leave. No more features after Sunday afternoon.
 		[ ] Aim for at least three calls over an hour each day for the last four days
+		[ ] Have a CLEAR handwritten set of instructions for thatha, and take a picture of it just in case
 		[ ] Monday-Wednesday morning (their evening)
 	[ ] Then spend at least one hour practicing with Patti on the tablet, for the last five days
 		[ ] Focus rest of time on speech therapy, talking to Thatha/Patti/Periamma/Aadith, and prepping for departure/Norway.
@@ -411,6 +412,7 @@ Here's the idea.
 			[*] http://stackoverflow.com/questions/26615889/how-to-change-the-launcher-logo-of-an-app-in-android-studio
 			[*] http://stackoverflow.com/questions/4755871/how-to-set-image-button-backgroundimage-for-different-state
 			[*] http://cyrilmottier.com/2014/11/17/grid-spacing-on-android/
+			[*] http://www.compiletimeerror.com/2014/03/android-button-selector-tutorial-with.html#.V5OV0U7S3UI
 			[*] Make these 50x50 in size. Then six in a row are 300 px, well within our range.
 		[*] Drawing Dots on touch
 			[*] http://stackoverflow.com/questions/11796357/draw-circle-on-touch
@@ -419,35 +421,51 @@ Here's the idea.
 		[*] Need APP icon - a tablet/boogie board. Done.
 		[*] Need eraser, ear, my/amma/balu/thatha images, and a red closed phone & a green open phone. Used Google Images + GIMP to create 200x200 .pngs
 		[*] Build the app, and test with different flags settings to see what UI looks like (for now keep pics there regardless of presence (not yet detected)
-	[ ] Third step
+	[ ] Third, Fourth steps
+		[ ] App Thread Structure
+			[ ] UI Thread - Handles Thread Creation, Destruction & a Queue of User Notifications
+			[ ] SIP Call Listener - Handles Broadcast Requests
+			[ ] SIP Registrar & Presence Polling, Network Monitor - Keep Track of Who is Online + Keep us Registered
+			[ ] SIP Call - Background Thread, Created & Destroyed per call
+			[ ] SIP-TCP Screen Sample, Encoding, & Sharing Thread
 		[ ] A
-			[ ] Set up SIP registration & presence & call and test presence subscription with SIP 
+			[ ] Set up network monitoring in a background thread
+			[ ] If the network is reachable, register every 2 minutes. 
+				[ ] If you fail to register, try again. Don't let the user know or stop ongoing calls or anything - log it - if there's really a network problems calls will kill themselves. 
+				[ ] Poll every 30 seconds for who of balu, amma, sush are online once registered - log this. 
+				[ ] Make UI buttons dependent on presence polling
+			[ ] If the network is not reachable, ask the UI thread to display a dialog till the problem is resolved (i.e. freeze)
+				[ ] All calls should be terminated in-house & the UI should revert to assuming no one is online & no call is active.
+				[ ] Check every 5 seconds for an update as long as you have focus
+				[ ] On resuming connectivity, ask the UI thread to remove the dialog, register, and poll, and so on.
+			[ ] User log in hard-coded to Thatha's account but NOT committed.
 		[ ] B
-			[ ] Only broadcast presence if the app has focus. Otherwise odds are Thatha won't see it. Don't bother with notifications and the like.
-			[ ] Run SIP in a background thread with AUDIO priority and see what quality is like. Have presence run in a different background thread. Have the main UI thread coordinate shutdown of threads as appropriate (e.g. SIP call shuts down at call termination, but SIP presence only shuts down on app termination, and drawing sampler/sip transmitter shuts down if a sip call has an issue).
-			[ ] Register and every 5 minutes, and demonstrate presence every 30 seconds, unless a network error occurs/is resolved. Several threads could detect a network error - rely on ONE (main thread) to do something about it for all the others. The rest take care of only themselves.
-			[ ] Test with toasts
-	[ ] Fourth Step
-		[ ] Make buttons dependent on presence, call status. 
-	[ ] Fifth Step
-		[ ] On incoming calls, allow the user to PICK UP or HANG UP
-		[ ] On outgoing calls, show a 'calling dialog' with the option to hang up, till the other user actually picks up
-		[ ] In the middle of an call do not allow other calls. 
-		[ ] Allow app to run in background, allow it to take focus on a call and make a sound, and during a call do not allow the screen to turn off. After 10 minutes without an active call auto terminate all threads. 
-	[ ] Sixth Step
-		[ ] On network errors, end ongoing calls, display a dialog with an "acknowledge" and don't resume allowing inputs till the network restores.
-		[ ] On remote network connections lost (e.g. if the presence is lost due to a network error on the other end), end the call, display a dialog, and return to the main screen on button press.
-		[ ] If a call terminates unexpectedly but there's no clear network error here or remotely, just go back to the main screen.
+			[ ] Set up the call listener 
+				[ ] On incoming calls, allow the user to PICK UP or HANG UP
+				[ ] In the middle of an call do not allow other calls. 
+			[ ] Set up calling based on face clicks
+				[ ] On outgoing calls, show a 'calling dialog' with the option to hang up, till the other user actually picks up
+				[ ] Notify the user about call timeouts and failures very simply (have call incoming/outgoing dialogs in a separate location from network failure so both can notify at the same time)
+			[ ] Make UI buttons dependent on call status (only show the person you're talking to, and have a flag that makes clicking that face again do nothing)
+				[ ] Show this regardless of presence information, but keep polling for presence so you can..
+				[ ] At the end of a call revert to the last polled data (store that somewhere)  
+		[ ] C
+			[ ] Kill the app and all threads if it ever loses focus. 
+			[ ] While open do not allow screen to turn off. 
+			[ ] After 10 minutes without an active call auto terminate all threads. 
+		[ ] D
+			[ ] Branch this app & make two - one for source, one for receiver, with different presence polling & display & call lists, and everything else the same (for now). Use this for testing.
+
+
 
 
 [ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
-[ ] Ignoring voice echo for now. 
+[ ] Ignoring voice echo for now - fix with headphones on both ends
 [ ] Should try for slow-updating video stills & hand-recognizing touches, authentication via the app, an emergency button that auto-dials a bunch of people with a prerecorded message after a timeout with a very audible/visible note to Thatha with the option to cancel. 
 [ ] Etc. - "can't hear," "can't see," etc. with pings to ME
 [ ] For now, focus on Skype voice. It's annoying to get it working within the same router subnet so use a phone in each house to get this tested. JUST VOICE - Intents, etc. But get sound across in real time.
 
 [ ] Transfer notes from last few days &  prioritize features.
-[ ] Write a basic client app that takes the bitmap via a get request of text, and unpacks it into a bitmap. Time it!!  
 
 [ ] Noticed that if the tablet charges completely down it's a ROYAL pain to get booted - just tell them how to power down/up and make sure they don't let it run dry, and that they know to call you if it does do that.
 	[ ] https://productforums.google.com/forum/#!topic/nexus/oTvwcpKxAdE
