@@ -427,7 +427,8 @@ Here's the idea.
 			[ ] SIP Call Listener - Handles Broadcast Requests
 			[ ] SIP Registrar & Presence Polling, Network Monitor - Keep Track of Who is Online + Keep us Registered
 			[ ] SIP Call - Background Thread, Created & Destroyed per call
-			[ ] SIP-TCP Screen Sample, Encoding, & Sharing Thread
+			[ ] cherryPy-TCP Screen Sample, Encoding, & Sharing Thread as in original demo (don't bother trying to make this secure, yet)
+				[ ] Modified CherryPy server on port 8080, with authentication, that receives encoding and relays it to those who request data, unprocessed, for post processing on-phone or browser later. This should basically just WORK as you already have the encoding/decoding flow down.
 		[ ] A
 			[ ] Set up network monitoring in a background thread
 			[ ] If the network is reachable, register every 2 minutes. 
@@ -455,8 +456,18 @@ Here's the idea.
 			[ ] After 10 minutes without an active call auto terminate all threads. 
 		[ ] D
 			[ ] Branch this app & make two - one for source, one for receiver, with different presence polling & display & call lists, and everything else the same (for now). Use this for testing.
-
-
+		[ ] E 
+			[ ] Modify CherryPy server with port, authentication, and change & test get using local requests (wget?)
+			[ ] Modify source app to send data in a background thread as in the first demo (source-rev-a)
+			[ ] Modify receiver app to parse and display data (scaled to size of screen). 
+		[ ] F
+			[ ] Remote troubleshooting with screenshare, remote installation and settings changes, like RDP?
+				[ ] Maybe a bad idea. But you can TEACH them how to tweak settings & install things.
+			[ ] This is an end-to-end app. It is your first stopping point.
+			[ ] TEST THIS. If preliminary tests suggest it works ok, then step back, prioritize what all you want to do in the next month.
+			[ ] Move on to Websocket HTML5 audio/screen share for Amma &| spend time with folks &| do some other to-dos 
+				[ ] E.g. getting amma a smartphone ASAP so you don't have to worry about any of this and can just send her the app directly.
+				[ ] http://www.trustedreviews.com/nexus-6p-review - + newegg 100$ off sale this 24th starting at midnight.
 
 
 [ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
@@ -491,6 +502,7 @@ Here's the idea.
 
 [ ] Issues noted with drawing so far:
 	[ ] Sound is VERY low - how's VoIP going to work? Get an app.. but then need one with an API, or set it up and make sure they know not to mess with it.
+		[ ] Can blow out speakers.
 	[ ] Perhaps an indexing method (diff, unique id, and handshake) will make sure thatha doesn't erase early. It might also lower spurious updates. Perhaps the webserver is having timing issues too, and this will help resolve them (don't send unnecessarily if nothing has changed). 
 	[ ] Be careful to use solid/striped or something other than red/green as colors are hard to tell apart I bet as we get older.
 	[ ] DISABLE auto-turn off when this app is on!! 
