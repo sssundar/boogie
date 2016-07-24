@@ -50,7 +50,7 @@ def rle_decode (rle_string):
 			color = color % 2			
 
 		if pixel_count < MAX_PIXELS:
-			return FALSE
+			return False
 
 		img.save(PATH, "PNG")
 

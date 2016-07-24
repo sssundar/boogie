@@ -47,7 +47,7 @@ public class DoodlerActivity extends Activity implements OnClickListener {
         callBaluBtn.setEnabled(true);
         callSushBtn.setEnabled(true);
 
-        callIssueBtn.setEnabled(false);
+        callIssueBtn.setEnabled(true);
         hangUpBtn.setEnabled(true);
     }
 

@@ -428,7 +428,29 @@ Here's the idea.
 			[ ] SIP Registrar & Presence Polling, Network Monitor - Keep Track of Who is Online + Keep us Registered
 			[ ] SIP Call - Background Thread, Created & Destroyed per call
 			[ ] cherryPy-TCP Screen Sample, Encoding, & Sharing Thread as in original demo (don't bother trying to make this secure, yet)
-				[ ] Modified CherryPy server on port 8080, with authentication, that receives encoding and relays it to those who request data, unprocessed, for post processing on-phone or browser later. This should basically just WORK as you already have the encoding/decoding flow down.
+		[*] Z
+			[*] Presence proof of concept
+				[*] Could also use polling & reporting with cherryPy for presence in a hackish way
+				[x] https://stackoverflow.com/questions/9459298/is-it-safe-to-use-the-android-net-sip-framework
+				[x] http://stackoverflow.com/questions/15820547/android-sip-with-csipsimple-and-pjsip
+				[x] This is going to take longer than a day - if you want presence, do it a simple way now so you can get to user testing. It's ok if it's kludgey.
+			[*] Send CherryPy a note (freely on a specific interface) with your name, every 10 seconds. Then users can request a dump of names active in the last 20 seconds and we'll send them info about "amma, balu, sush, mani" as a 4 letter binary string ("0101"). 
+			[*] Modified CherryPy server on port 8080, with authentication, that receives encoding and relays it to those who request data, unprocessed, for post processing on-phone or browser later. This should basically just WORK as you already have the encoding/decoding flow down.
+				[*] Here's what we're going to do: for now, authentication will be a JSON key/value parameter in all requests that is NOT committed
+				[*] get will return RLE encoded data if authentication is valid, or a presence string if that is requested in a flag parameter.
+				[*] put will allow presence alerts from users.
+					[ ] http://docs.cherrypy.org/en/latest/tutorials.html#tutorial-7-give-us-a-rest
+					[ ] http://stackoverflow.com/questions/6211381/how-to-read-parameters-from-get-request-in-cherrypy	
+				[*] I should not, in the future, commit my ec2 public IP - it's asking for trouble.  	
+					[x] For now, manually blocking the IPs I see trying to brute force my server. Not so easy.
+					[*] Looks like they got into 4001 already. Not great. Ok, let's change both passwords to something annoying as it'll be hardcoded from now on. 
+					[*] Also let's change the admin FreePBX password to something harder and save it elsewhere.
+					[*] Ok, let's add balu and amma as users for kicks.
+				[*] Tested this with python.requests & EC2 http cherrypy server running on port 8080 - works as expected.
+					[*] Place actual passwords, then revert after scp'ing and testing. Then commit.
+					[*] ssh -i test_voip.pem ubuntu[[@ec2-54-183-116-184.us-west-1.compute.amazonaws.com]]
+					[*] scp -i test_voip.pem ~/Documents/[[../boogie/src/helloworld.py|boogie/src/barebones/screen_share_server.py]] ubuntu[[@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~]]
+					[*] Passed. Changing files back without actual credentials, then commiting. Server is running as an independent process.
 		[ ] A
 			[ ] Set up network monitoring in a background thread
 			[ ] If the network is reachable, register every 2 minutes. 
@@ -469,6 +491,8 @@ Here's the idea.
 				[ ] E.g. getting amma a smartphone ASAP so you don't have to worry about any of this and can just send her the app directly.
 				[ ] http://www.trustedreviews.com/nexus-6p-review - + newegg 100$ off sale this 24th starting at midnight.
 
+
+[ ] **Replace EC2 instance & APP hard-coded data with new public IP to prevent attacks, AND do NOT commit them.**
 
 [ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
 [ ] Ignoring voice echo for now - fix with headphones on both ends
