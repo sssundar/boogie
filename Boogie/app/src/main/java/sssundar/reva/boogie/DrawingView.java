@@ -18,8 +18,10 @@ public class DrawingView extends View {
 
     private int paintColor = 0xFF000000; // black
 
+    private int userID;
+
     private Canvas drawCanvas;
-    public Bitmap canvasBitmap;
+    public volatile Bitmap canvasBitmap;
 
     public DrawingView(Context context, AttributeSet attrs){
         super(context, attrs);
@@ -39,6 +41,8 @@ public class DrawingView extends View {
         drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
         canvasPaint = new Paint(Paint.DITHER_FLAG);
+
+        userID = DoodlerActivity.userID;
     }
 
     @Override
@@ -56,26 +60,28 @@ public class DrawingView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        float touchX = event.getX();
-        float touchY = event.getY();
+        if (userID == 1) {
+            float touchX = event.getX();
+            float touchY = event.getY();
 
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                drawPath.moveTo(touchX, touchY);
-                drawCanvas.drawCircle(touchX, touchY, 2, drawPaint);
-                break;
-            case MotionEvent.ACTION_MOVE:
-                drawPath.lineTo(touchX, touchY);
-                break;
-            case MotionEvent.ACTION_UP:
-                drawCanvas.drawPath(drawPath, drawPaint);
-                drawPath.reset();
-                break;
-            default:
-                return false;
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    drawPath.moveTo(touchX, touchY);
+                    drawCanvas.drawCircle(touchX, touchY, 2, drawPaint);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    drawPath.lineTo(touchX, touchY);
+                    break;
+                case MotionEvent.ACTION_UP:
+                    drawCanvas.drawPath(drawPath, drawPaint);
+                    drawPath.reset();
+                    break;
+                default:
+                    return false;
+            }
+
+            invalidate();
         }
-
-        invalidate();
         return true;
     }
 

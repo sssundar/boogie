@@ -423,11 +423,13 @@ Here's the idea.
 		[*] Build the app, and test with different flags settings to see what UI looks like (for now keep pics there regardless of presence (not yet detected)
 	[ ] Third, Fourth steps
 		[ ] App Thread Structure
-			[ ] UI Thread - Handles Thread Creation, Destruction & a Queue of User Notifications
-			[ ] SIP Call Listener - Handles Broadcast Requests
-			[ ] SIP Registrar & Presence Polling, Network Monitor - Keep Track of Who is Online + Keep us Registered
-			[ ] SIP Call - Background Thread, Created & Destroyed per call
-			[ ] cherryPy-TCP Screen Sample, Encoding, & Sharing Thread as in original demo (don't bother trying to make this secure, yet)
+			[ ] UI Thread - Handles Thread Creation, Destruction & a Queue of User Notifications.
+			[ ] On Start/OnPause Creation/Destruction
+				[ ] SIP Call Listener - Handles Broadcast Requests
+				[ ] SIP Registrar & Presence Polling, Network Monitor - Keep Track of Who is Online + Keep us Registered
+			[ ] OnCall/OnPause
+				[ ] SIP Call - Background Thread, Created & Destroyed per call
+				[ ] cherryPy-TCP Screen Sample, Encoding, & Sharing Thread as in original demo
 		[*] Z
 			[*] Presence proof of concept
 				[*] Could also use polling & reporting with cherryPy for presence in a hackish way
@@ -449,56 +451,100 @@ Here's the idea.
 				[*] Tested this with python.requests & EC2 http cherrypy server running on port 8080 - works as expected.
 					[*] Place actual passwords, then revert after scp'ing and testing. Then commit.
 					[*] ssh -i test_voip.pem ubuntu[[@ec2-54-183-116-184.us-west-1.compute.amazonaws.com]]
-					[*] scp -i test_voip.pem ~/Documents/[[../boogie/src/helloworld.py|boogie/src/barebones/screen_share_server.py]] ubuntu[[@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~]]
+					[*] scp -i test_voip.pem ~/Documents/[[../boogie/src/helloworld.py|boogie/src/screen_share_server/screen_share_server.py]] ubuntu[[@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~]]
+					[*] Run ps aux |grep -e python and kill previous background server process when reloading or modifying server
 					[*] Passed. Changing files back without actual credentials, then commiting. Server is running as an independent process.
-		[ ] A
-			[ ] Set up network monitoring in a background thread
-			[ ] If the network is reachable, register every 2 minutes. 
-				[ ] If you fail to register, try again. Don't let the user know or stop ongoing calls or anything - log it - if there's really a network problems calls will kill themselves. 
-				[ ] Poll every 30 seconds for who of balu, amma, sush are online once registered - log this. 
-				[ ] Make UI buttons dependent on presence polling
-			[ ] If the network is not reachable, ask the UI thread to display a dialog till the problem is resolved (i.e. freeze)
-				[ ] All calls should be terminated in-house & the UI should revert to assuming no one is online & no call is active.
-				[ ] Check every 5 seconds for an update as long as you have focus
-				[ ] On resuming connectivity, ask the UI thread to remove the dialog, register, and poll, and so on.
-			[ ] User log in hard-coded to Thatha's account but NOT committed.
-		[ ] B
-			[ ] Set up the call listener 
-				[ ] On incoming calls, allow the user to PICK UP or HANG UP
-				[ ] In the middle of an call do not allow other calls. 
-			[ ] Set up calling based on face clicks
-				[ ] On outgoing calls, show a 'calling dialog' with the option to hang up, till the other user actually picks up
-				[ ] Notify the user about call timeouts and failures very simply (have call incoming/outgoing dialogs in a separate location from network failure so both can notify at the same time)
-			[ ] Make UI buttons dependent on call status (only show the person you're talking to, and have a flag that makes clicking that face again do nothing)
-				[ ] Show this regardless of presence information, but keep polling for presence so you can..
-				[ ] At the end of a call revert to the last polled data (store that somewhere)  
-		[ ] C
-			[ ] Kill the app and all threads if it ever loses focus. 
-			[ ] While open do not allow screen to turn off. 
-			[ ] After 10 minutes without an active call auto terminate all threads. 
-		[ ] D
-			[ ] Branch this app & make two - one for source, one for receiver, with different presence polling & display & call lists, and everything else the same (for now). Use this for testing.
+					[*] Updated to allow presence logging & error logging in get call itself.
+		[*] A, 
+			[*] Set up network monitoring in a background thread that starts onStart and dies onPause
+			[*] If the network is reachable, register once (your IP won't change during a call)
+				[*] If you fail to register, try again, and keep trying till you succeed. Don't let the user know or stop ongoing calls or anything - log it - if there's really a network problems calls will kill themselves. 
+				[*] Poll every 5 seconds for who of balu, amma, sush are online once registered - log this - but do NOT display it till you are registered.
+					[ ] That is, have a flag set in the UI thread and be able to set button flags and force a refresh of their display with a function call.
+				[*] Make UI buttons dependent on presence polling
+					[ ] display sush, amma, balu (and test by pinging the cherrypy server with a python script)
+			[*] If the network is not reachable, ask the UI thread to display a toast periodically till the problem is resolved
+				[*] All calls should be terminated in-house & the UI should revert to assuming no one is online & no call is active.
+				[*] Check every 5 seconds for an update as long as you have focus
+				[*] On resuming connectivity, ask the UI thread to let the toast die, then proceed back to registration, and poll, and so on.
+			[*] User log in hard-coded to Thatha's accounts but NOT committed (for registration with asterisk, cherrypy)
+		[*] B
+			[*] Set up the call listener 
+				[x] On incoming calls, allow the user to PICK UP or HANG UP
+				[*] In the middle of an call do not allow other calls. 
+			[*] Set up calling based on face clicks
+				[x] On outgoing calls, show a 'calling dialog' with the option to hang up, till the other user actually picks up
+				[x] Notify the user about call timeouts and failures very simply (have call incoming/outgoing dialogs in a separate location from network failure so both can notify at the same time)
+			[*] Make UI buttons dependent on call status (only show the person you're talking to, and have a flag that makes clicking that face again do nothing)
+				[*] Show this regardless of presence information, but keep polling for presence so you can..
+				[*] At the end of a call revert to the last polled data (store that somewhere)  
+			[*] Change CherryPy server so that on 'hard to hear' presses, it is stored in the server with a marker for the person you're in the call with, cleared on read (change put, get)
+		[*] C
+			[*] Kill the app and all threads if it ever loses focus. 
+			[*] While open do not allow screen to turn off. 
+				[*] https://developer.android.com/training/scheduling/wakelock.html
+		[*] D
+			[*] This one app will work for both sources and receivers
 		[ ] E 
-			[ ] Modify CherryPy server with port, authentication, and change & test get using local requests (wget?)
-			[ ] Modify source app to send data in a background thread as in the first demo (source-rev-a)
-			[ ] Modify receiver app to parse and display data (scaled to size of screen). 
-		[ ] F
-			[ ] Remote troubleshooting with screenshare, remote installation and settings changes, like RDP?
-				[ ] Maybe a bad idea. But you can TEACH them how to tweak settings & install things.
-			[ ] This is an end-to-end app. It is your first stopping point.
-			[ ] TEST THIS. If preliminary tests suggest it works ok, then step back, prioritize what all you want to do in the next month.
-			[ ] Move on to Websocket HTML5 audio/screen share for Amma &| spend time with folks &| do some other to-dos 
-				[ ] E.g. getting amma a smartphone ASAP so you don't have to worry about any of this and can just send her the app directly.
-				[ ] http://www.trustedreviews.com/nexus-6p-review - + newegg 100$ off sale this 24th starting at midnight.
+			[*] Modify CherryPy server with port, authentication, and change & test get using local requests (wget?)
+			[*] Modify source app to send data in a background thread as in the first demo (source-rev-a)
+			[*] Modify receiver app to parse and display data (scaled to size of screen). 
 
+		[ ] F TESTING
+			[*] Well, the basics are CODED - but they don't yet work.
+			[*] Without calls, presence works.
+			[*] With calls, call quality button works.
+			[*] No internet works - and presence is nulled properly.
+			[*] Buttons are showing up and going away when they're supposed to.
+			[*] UI is good - it's screen sharing + call ending that is critical now. Voice is a bit delayed but nice quality.
+			[*] When these work, there'll still be tons of little bugs and exception handling to work on (and I'll need to find a way of getting a cheap android device to test that with)
+				[ ] And timing, of course, lots of timing tests. These can be done on either end.
+			[x] End call works on one end, but doesn't show up on the other well past the timeout. Not sure why.
+			[*] 5 second polling is WAY too long. Cut it to 1 seconds for presence/error polling.
+			[x] Screen share is not working. Ok, now it's working. No, it was super delayed. I have SetScreen exceptions about permissions to Views.
+				[*] Well, I'm not getting SetScreen exceptions anymore, but I'm not seeing my screen update either.
+				[*] The webserver CherryPy shows the strings are being properly sent from the source device
+				[*] It's the receiver that's iffy. Yep, definitely. Whoops, forgot to start sampler on incoming call. Only started on outgoing. 
+				[*] Ok, receiver works well, transfer is FAST. But 200x200 is terrible. Need more - and I don't think this is terrible. Try doubling it (40,000 -> 160,000 x 4 bytes) = half a MB but that's fine.
+				[*] Yep, screen transfer DOESN'T stop after I end a call. Let's see whose fault that is. Must be on the recevier side. Resolved with a kludge - made sample_screen kill itself when it notices call = null.
+				[x] **SO MUCH OF THIS IS HANGING BY A THREAD.... so many chances for asynchronous error. The only thing stopping it is humans move slowly. But they'll find a way..**
+			[*] Presence DURING call is not working - things are getting disabled that shouldn't be. In particular need to ask presence thread not to update display if in call (think that's already in there.. but only AFTER falsing everything, Nuts).
+			[*] On registration failure, it helps to exit the app - weird. So I guess I should check for that and just kill the sip profiles MANUALLY. Hm. Because it really shouldn't fail. And doing this in a loop should help.
+				[*] When I "onPause" and come back, noticing that it's not able to register or make calls. Interesting. This feels like the last bug. 
+				[*] Ok, just killing entire system on issues like this (any of the home buttons). Will teach them (with written tutorial) how to avoid it for now. Not sure how to force a "go back to home screen."
+				[x] Meh.. not really. I think it's not helping so much to deal with this. I can handle it later - there's a deeper underlying problem definitely.
+			[x] When a call doesn't get answered, what do you do? Currently, print a stacktrace. But I don't think you DO anything. Check what an answer timeout DOES/Throws.
+				[ ] You should let the user know - sometimes I have to restart a few times. Maybe it's just the timeout?
+			[*] Play with resolution to 400x400 and see what it looks like.
+				[*] Need larger heap - we're using almost all of it with 400x400. 0.13 Mb for flex. Not good.
+			[ ] MAKE PRESENCE GO AWAY FASTER - IT'S MISLEADING
+			[ ] Noticing now that there's a connection issue. With the two devices on wifi networks (different) that I know have worked with SIP in the past, now I have [CDS] rx timeout: 1000 and I don't know why.
+				[ ] Increased to 2000, same issue. I am able to register, but I can't make calls.
+				[ ] The freepbx admin dashboard shows 15 active calls. Maybe that's part of the issue.
+				[ ] Unable to fix this - rebooted it, asterisk, cherrypy. Only cherrypy is working. Huawei is not able to register.
+			[ ] Server downtime - no response to user - BAD.
+				[ ] NEED FAIL2BAN - Need to figure out random Huawei configuration issues.
+			[*] Toast for network loss sticks around WAY too long. Fixed.
+			[*] Sometimes call end works well.. e.g. when Thatha calls Amma, but let's also try the other way around. 
+				[*] Call end works when we're both connected, but pressing BACK for instance, takes FOREVER to time out on the other side. But it does eventually. 
+				[*] Ok, that's fine for now. 
+			[*] Gotta make sure threads are closing/opening when expected.
+				[*] Kludged to make sampler thread close. Definitely going to need another device to troubleshoot this.
+		[ ] Remote troubleshooting with screenshare, remote installation and settings changes, like RDP?
+			[ ] Maybe a bad idea. But you can TEACH them how to tweak settings & install things.
+			[x] Yeah, not happening. You'll have to use voice to guide them. Ok. 
+		[x] This is an end-to-end app. It is your first stopping point.
+			[ ] I did not get the app working in time. As of 26 July 2016 I've seen it go from working perfectly to having the Huawei unable to connect via SIP (CherryPy is fine).
+			[ ] So something about SIP is unhappy - and it started happening after I increased screen res to 400x400 (then back down). 
+		[ ] Prioritize to-dos (packing, credit payment, checking in, Amma's will for Thatha, cheap android device for testing, speech therapy, iceland bookings, mavudu...)
+			[ ] I expect ALL of these done tonight so at least you have one day of testing. 
+			[ ] But I expect Thatha Patti to be the priority past the BASICS -> GET TO TESTING WITH THEM.
 
 [ ] **Replace EC2 instance & APP hard-coded data with new public IP to prevent attacks, AND do NOT commit them.**
-
-[ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard
+[ ] Must play with drawing touches to allow hand rests not to screw things up - shouldn't be hard (using gloves for now)
 [ ] Ignoring voice echo for now - fix with headphones on both ends
 [ ] Should try for slow-updating video stills & hand-recognizing touches, authentication via the app, an emergency button that auto-dials a bunch of people with a prerecorded message after a timeout with a very audible/visible note to Thatha with the option to cancel. 
-[ ] Etc. - "can't hear," "can't see," etc. with pings to ME
-[ ] For now, focus on Skype voice. It's annoying to get it working within the same router subnet so use a phone in each house to get this tested. JUST VOICE - Intents, etc. But get sound across in real time.
+[*] Etc. - "can't hear," "can't see," etc. with **pings to ME - LOGGING.**
 
 [ ] Transfer notes from last few days &  prioritize features.
 
@@ -507,9 +553,6 @@ Here's the idea.
 [*] Noticed that I can't log into the server remotely and start up this app - if I do & it seems to bind port 80 but the app can't talk to the server!
 	[*] **lol, forgot to connect to wifi. No duh I have an IO exception - I should notify the user if this is the case!!**
 	[*] try the server business again - yep, no problem
-
-[ ] Work on a basic http get app for the receiver as well (build for my phone)
-[ ] Add in VoIP demo to me alone
 
 [ ] Notes on ScreenMeet/doodle app
 	[ ] wow, that looked great, but it had up to 13 seconds delay from the tablet to the phone (i'm just assuming their servers are in USA, so it's a good estimate for my app too).
@@ -542,15 +585,10 @@ Here's the idea.
 [ ] Putting unique indexes (large, large wrapping #) on these messages may help order them so they can be displayed well despite the slow update. I can also have talkback so the app knows if its message has been received by Amma.
 
 [ ] Aesthetics - usability - home buttons, see how Thatha uses the tablet, make it easier for his use. How to avoid recognizing his hand pressure as a press in the doodle? Look for open-source doodle code with APIs if possible to grab the screen..
-[ ] Remote control of Tablet - Remote Update of App - App without Developer Mode
-[ ] Flashing light to say "sent" so Thatha knows when he can clear - and send before clear so it's on record. Allow scrolling of saved sessions in real time so Amma can review notes.
+[ ] Remote control of Tablet w/ remote updates of App.. 
 [ ] Add in VoIP to Amma, Balu mama, Vikram, Suman, ... 
 [ ] Make VoIP optional in case of low bandwidth
 [ ] Add save-session features for client app?
-[ ] Webserver security & authentication
-	[ ] Size limits on post data
-	[ ] Post, not put, as otherwise RLE images stored in browser..
-[ ] Cleanup last file so no local data exists on server.
 [ ] Look into RPi2 webserver hosting & port forwarding, and network monitoring for security. 
 
 
