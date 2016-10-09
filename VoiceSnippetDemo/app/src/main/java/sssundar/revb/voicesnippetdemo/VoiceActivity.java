@@ -2,9 +2,12 @@ package sssundar.revb.voicesnippetdemo;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.MotionEvent;
@@ -31,11 +34,11 @@ public class VoiceActivity extends Activity implements View.OnTouchListener {
 
     public void setup_app_persistent_storage () {
         String folder_main = "Boogie_Voice_Demo";
-        File f = new File(Environment.getExternalStorageDirectory(), folder_main);
+        File f = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), folder_main);
         if (!f.exists()) {
             f.mkdirs();
         }
-        outputFile = Environment.getExternalStorageDirectory().getAbsolutePath() + "/" + folder_main + "/" + "temp.3gp";
+        outputFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM).getAbsolutePath() + "/" + folder_main + "/" + "temp.3gp";
     }
 
     @Override

@@ -1,0 +1,22 @@
+CUrl requests to test the voice_share_server
+Last Revised 8 October 2016
+
+curl -X POST -F "myFile=@/home/sush/Downloads/test.3gp" localhost:8080/upload
+curl -o test.3gp localhost:8080/download/?name=test.3gp
+curl -X GET localhost:8080/check_mailbox
+
+I can send and receive the file and play it back just fine.
+
+Testing Remotely
+
+ssh -i test_voip.pem ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com
+scp -i test_voip.pem ~/Documents/boogie/src/voice_share_server/voice_share_server.py ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~
+
+ps aux | grep -e python
+top.. k .. PID
+
+curl -X POST -F "myFile=@/home/sush/Documents/boogie/src/voice_share_server/test.3gp" ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/upload
+curl -o test.3gp ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/download/?name=test.3gp
+curl -X GET ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/check_mailbox
+
+Works!
