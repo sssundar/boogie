@@ -1,0 +1,61 @@
+Curl requests to test the BoogieBackend v0
+Last Revised 2016-10-09 by Sushant Sundaresh
+
+-- Local Testing --
+
+(1) Test Presence
+http://localhost:8080/presence/?user=sudha&password=password1 works fine - 1,2,3 returned.
+
+(2) Storage paths set up
+	Let's try putting something in them, and seeing whether the resulting arrays are ordered properly.
+		In each person's folder, let's put 3 files 
+			Amma: (0_mani.txt, 1_sushant.txt, 2_sudha.3gp)
+			Mani: (2_mani.txt, 1_sushant.txt, 0_sudha.3gp)
+			Sushant: (1_mani.txt, 2_sushant.txt, 0_sudha.3gp)
+		and let's see if they sort correct on startup by printing the arrays to stdout!
+	Works!
+
+(3) Mailbox to check ordering, auth, and lack of state change
+http://localhost:8080/check_mailbox/?user=sudha&password=password1 should return 0_mani.txt - yes
+http://localhost:8080/check_mailbox/?user=sudha&password=password1 should return 0_mani.txt - yes
+http://localhost:8080/check_mailbox/?user=sushant&password=password1 should return nothing - yes
+http://localhost:8080/check_mailbox/?user=sushant&password=password0 should return 0_sudha.3gp - yes
+
+(4) Download - with fake files to check deletion
+curl -o 0_sudha.txt "http://localhost:8080/download/?user=sushant&password=password0&fname=0_sudha.txt" should have 0 size - yes
+curl -o 1_sudha.3gp "http://localhost:8080/download/?user=sushant&password=password1&fname=0_sudha.3gp" should have 0 size - yes
+curl -o 2_sudha.3gp "http://localhost:8080/download/?user=sushant&password=password0&fname=0_sudha.3gp" should have >0 size - fails
+
+Deleting file results in timeout - need callback once file served.
+Also need to RETURN output of serve_file. Works fine now.
+
+(5) Upload - with fake files, then mailbox + download to make sure state changed properly, for two different users
+
+curl -X POST -F "myFile=@/home/sush/Documents/boogie/src/share_and_message_server/password0_sushant.txt" "http://localhost:8080/upload"
+
+Clear directories
+Make a single test file password0_sushant.txt
+Check everyone's mailbox
+Run the curl command above
+Make sure it's in now in everyone's directory with "hi" inside
+Check everyone's mailbox - and make sure it's gone from the temporary directory
+Try and retrieve it
+curl -o test.txt "http://localhost:8080/download/?user=sushant&password=password0&fname=1476048436516_sushant.txt"
+Yes! Good.
+
+(6) Test RLE locally only - not worth testing on branch. Just make sure it works with a POST request to the specific url, then try to get the latest RLE
+	Works!!
+	
+-- Testing Remotely With an Android App --
+
+ssh -i test_voip.pem ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com
+scp -i test_voip.pem ~/Documents/boogie/src/voice_share_server/voice_share_server.py ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~
+
+ps aux | grep -e python
+top.. k .. PID
+
+curl -X POST -F "myFile=@/home/sush/Documents/boogie/src/voice_share_server/test.3gp" ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/upload
+curl -o test.3gp ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/download/?name=test.3gp
+curl -X GET ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/check_mailbox
+
+Works!
