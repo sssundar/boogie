@@ -1,6 +1,7 @@
 package sssundar.revb.boogie;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -10,6 +11,8 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -92,20 +95,36 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     public void setPresenceState (int howMany) {
         switch (howMany) {
             case 0:
-                presence_button.setSelected(false);
-                presence_button.setActivated(false);
+                MessengerActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        presence_button.setSelected(false);
+                        presence_button.setActivated(false);
+                    }
+                });
                 break;
             case 1:
-                presence_button.setSelected(false);
-                presence_button.setActivated(true);
+                MessengerActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        presence_button.setSelected(false);
+                        presence_button.setActivated(true);
+                    }
+                });
                 break;
             case 2:
-                presence_button.setSelected(true);
-                presence_button.setActivated(false);
+                MessengerActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        presence_button.setSelected(true);
+                        presence_button.setActivated(false);
+                    }
+                });
                 break;
             case 3:
-                presence_button.setSelected(true);
-                presence_button.setActivated(true);
+                MessengerActivity.this.runOnUiThread(new Runnable() {
+                    public void run() {
+                        presence_button.setSelected(true);
+                        presence_button.setActivated(true);
+                    }
+                });
                 break;
             default:
                 break;
@@ -713,7 +732,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         setHighMessage(6); // Blank
     }
 
-    // Must be called before other threads are activated
+    // Must be called before other threads are activated, from the UI thread
     public void reset_ui_state () {
         drawView.allowDrawing(true); // Mani only; irrelevant for others.
         set_action_state(false);
@@ -758,7 +777,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
             if (message_history.get(0).get(1).equals("unread")) {
                 return;
             } else {
-                new File(message_history.get(0).get(5)).delete();
+                new File(message_history.get(0).get(4)).delete();
                 message_history.remove(0);
             }
         }
@@ -772,35 +791,22 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         // to the source user + read state
         disable_all_message_slots();
         for (int i = 0; i < Math.min(message_history.size(),5); i++) {
-            if (message_history.get(i).get(2).equals("read")) {
-                switch (message_history.get(i).get(3)) {
-                    case "sushant":
-                        setMessage(i, 1);
-                        break;
-                    case "sudha":
-                        setMessage(i, 3);
-                        break;
-                    case "mani":
-                        setMessage(i, 5);
-                        break;
-                    default:
-                        Log.d("Boogie", "Invalid Case Condition");
-                        break;
+            String uname = message_history.get(i).get(2);
+            if (message_history.get(i).get(1).equals("read")) {
+                if (uname.equals("sushant")) {
+                    setMessage(i, 1);
+                } else if (uname.equals("sudha")) {
+                    setMessage(i, 3);
+                } else if (uname.equals("mani")) {
+                    setMessage(i, 5);
                 }
             } else {
-                switch (message_history.get(i).get(3)) {
-                    case "sushant":
-                        setMessage(i, 0);
-                        break;
-                    case "sudha":
-                        setMessage(i, 2);
-                        break;
-                    case "mani":
-                        setMessage(i, 4);
-                        break;
-                    default:
-                        Log.d("Boogie", "Invalid Case Condition");
-                        break;
+                if (uname.equals("sushant")) {
+                    setMessage(i, 0);
+                } else if (uname.equals("sudha")) {
+                    setMessage(i, 2);
+                } else if (uname.equals("mani")) {
+                    setMessage(i, 4);
                 }
             }
         }
@@ -817,13 +823,13 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
             if (!c.isDirectory()) {
                 message_history.add(new ArrayList<String>());
                 ArrayList<String> meta_message = message_history.get(message_history.size() - 1);
-                String tokens[] = c.getName().split("_");  // 0 MSSERVERTIMESTAMP_READ/UNREAD_SOURCEUSER.EXTENSION
-                meta_message.add(tokens[0]);               // 1 millisecond timestamp from server
-                meta_message.add(tokens[1].toLowerCase()); // 2 read, unread
-                tokens = tokens[2].split(".");
-                meta_message.add(tokens[0].toLowerCase()); // 3 sushant, sudha, mani
-                meta_message.add(tokens[1].toLowerCase()); // 4 3gp or txt
-                meta_message.add(c.getAbsolutePath());     // 5 file path (for purging)
+                String tokens[] = c.getName().split("_");  // MSSERVERTIMESTAMP_READ/UNREAD_SOURCEUSER.EXTENSION
+                meta_message.add(tokens[0].toLowerCase());               // 0 millisecond timestamp from server
+                meta_message.add(tokens[1].toLowerCase()); // 1 read, unread
+                String userext[] = tokens[2].split("\\.");
+                meta_message.add(userext[0].toLowerCase()); // 2 sushant, sudha, mani
+                meta_message.add(userext[1].toLowerCase()); // 3 3gp or txt
+                meta_message.add(c.getAbsolutePath());     // 4 file path (for purging)
             }
         }
 
@@ -831,7 +837,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         Collections.sort(message_history, new Comparator<List<String>>() {
             @Override
             public int compare(List<String> o1, List<String> o2) {
-                return Integer.getInteger(o1.get(0)).compareTo(Integer.getInteger(o2.get(0)));
+                return new Integer(o1.get(0)).compareTo(new Integer(o2.get(0)));
             }
         });
 
@@ -840,6 +846,17 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
 
         release_system_lock();
         return true;
+    }
+
+    private void test_update_message_history (String filename) {
+        FileOutputStream os;
+        try {
+            os = new FileOutputStream(new File(dir_messages + filename));
+            os.write("Hi there!".getBytes());
+            os.close();
+        } catch (IOException e) {
+            Log.d("Boogie", "File write failed: " + e.toString());
+        }
     }
 
     @Override
@@ -854,6 +871,13 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         getUIObjects();
         reset_ui_state();
         setup_app_containers();
+
+        test_update_message_history("0_unread_sushant.3gp");
+        test_update_message_history("1_read_sushant.3gp");
+        test_update_message_history("2_unread_sudha.3gp");
+        test_update_message_history("3_unread_mani.3gp");
+        test_update_message_history("4_read_sushant.3gp");
+
         update_message_history();
     }
 
