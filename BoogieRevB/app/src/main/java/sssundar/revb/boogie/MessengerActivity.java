@@ -2,17 +2,31 @@ package sssundar.revb.boogie;
 
 import android.app.Activity;
 import android.content.Context;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Process;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageButton;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,9 +41,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     // 0 = sushant, password0
     // 1 = sudha, password1
     // 2 = mani, password2
-    public static int userID = 2;
-    public static String password = "password2";
-    public static String username = "mani";
+    public static final int userID = 0;
+    public static final String password = "password0";
+    public static final String username = "sushant";
+    public static final String backendServer = "ec2-54-183-116-184.us-west-1.compute.amazonaws.com";
 
     // Views & Buttons
     public DrawingView drawView;
@@ -50,6 +65,21 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     // Synchronous State
     public volatile boolean message_history_is_being_accessed = false;
     public volatile ArrayList<ArrayList<String>> message_history;
+    public int unique_output_id;
+    private boolean highMessagePressed;
+    private boolean highmidMessagePressed;
+    private boolean midMessagePressed;
+    private boolean lowmidMessagePressed;
+    private boolean lowMessagePressed;
+    private boolean playbackStarted;
+
+    // Audio Handling (Recording, Playback)
+    private MediaRecorder myAudioRecorder = null;
+    private MediaPlayer myMediaPlayer = null;
+    private AudioManager myAudioManager = null;
+
+    // Threads
+    public Thread message_handler;
 
     public void getUIObjects () {
         drawView = (DrawingView) findViewById(R.id.doodler);
@@ -59,39 +89,43 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         action_button.setOnTouchListener(this);
 
         highMessage_Amma = (ImageButton) findViewById(R.id.sudha_high);
-        highMessage_Amma.setOnTouchListener(this);
         highmidMessage_Amma = (ImageButton) findViewById(R.id.sudha_highmid);
-        highmidMessage_Amma.setOnTouchListener(this);
         midMessage_Amma = (ImageButton) findViewById(R.id.sudha_mid);
-        midMessage_Amma.setOnTouchListener(this);
         lowmidMessage_Amma = (ImageButton) findViewById(R.id.sudha_lowmid);
-        lowmidMessage_Amma.setOnTouchListener(this);
         lowMessage_Amma = (ImageButton) findViewById(R.id.sudha_low);
-        lowMessage_Amma.setOnTouchListener(this);
 
         highMessage_Sushant = (ImageButton) findViewById(R.id.sushant_high);
-        highMessage_Sushant.setOnTouchListener(this);
         highmidMessage_Sushant = (ImageButton) findViewById(R.id.sushant_highmid);
-        highmidMessage_Sushant.setOnTouchListener(this);
         midMessage_Sushant = (ImageButton) findViewById(R.id.sushant_mid);
-        midMessage_Sushant.setOnTouchListener(this);
         lowmidMessage_Sushant = (ImageButton) findViewById(R.id.sushant_lowmid);
-        lowmidMessage_Sushant.setOnTouchListener(this);
         lowMessage_Sushant = (ImageButton) findViewById(R.id.sushant_low);
-        lowMessage_Sushant.setOnTouchListener(this);
 
         highMessage_Mani = (ImageButton) findViewById(R.id.mani_high);
-        highMessage_Mani.setOnTouchListener(this);
         highmidMessage_Mani = (ImageButton) findViewById(R.id.mani_highmid);
-        highmidMessage_Mani.setOnTouchListener(this);
         midMessage_Mani = (ImageButton) findViewById(R.id.mani_mid);
-        midMessage_Mani.setOnTouchListener(this);
         lowmidMessage_Mani = (ImageButton) findViewById(R.id.mani_lowmid);
-        lowmidMessage_Mani.setOnTouchListener(this);
         lowMessage_Mani = (ImageButton) findViewById(R.id.mani_low);
+
+        highMessage_Amma.setOnTouchListener(this);
+        highmidMessage_Amma.setOnTouchListener(this);
+        midMessage_Amma.setOnTouchListener(this);
+        lowmidMessage_Amma.setOnTouchListener(this);
+        lowMessage_Amma.setOnTouchListener(this);
+
+        highMessage_Sushant.setOnTouchListener(this);
+        highmidMessage_Sushant.setOnTouchListener(this);
+        midMessage_Sushant.setOnTouchListener(this);
+        lowmidMessage_Sushant.setOnTouchListener(this);
+        lowMessage_Sushant.setOnTouchListener(this);
+
+        highMessage_Mani.setOnTouchListener(this);
+        highmidMessage_Mani.setOnTouchListener(this);
+        midMessage_Mani.setOnTouchListener(this);
+        lowmidMessage_Mani.setOnTouchListener(this);
         lowMessage_Mani.setOnTouchListener(this);
     }
 
+    // Methods
     public void setPresenceState (int howMany) {
         switch (howMany) {
             case 0:
@@ -739,6 +773,12 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         setPresenceState(0);
         disable_all_message_slots();
         message_history_is_being_accessed = false;
+        highMessagePressed = false;
+        highmidMessagePressed = false;
+        midMessagePressed = false;
+        lowmidMessagePressed = false;
+        lowMessagePressed = false;
+        playbackStarted = false;
     }
 
     public void setup_app_containers() {
@@ -769,6 +809,13 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                 c.delete();
             }
         }
+
+        // TODO Remove Clean up messages...
+        for (File c : new File(dir_messages).listFiles()) {
+            if (!c.isDirectory()) {
+                c.delete();
+            }
+        }
     }
 
     // Must be locked before calling
@@ -789,7 +836,6 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         // to indices 4, 3, 2, 1, 0 (newer to oldest)
         // and set the ImageButton settings according
         // to the source user + read state
-        disable_all_message_slots();
         for (int i = 0; i < Math.min(message_history.size(),5); i++) {
             String uname = message_history.get(i).get(2);
             if (message_history.get(i).get(1).equals("read")) {
@@ -809,6 +855,9 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     setMessage(i, 4);
                 }
             }
+        }
+        for (int i = Math.min(message_history.size(), 5); i < 5; i++) {
+            setMessage(i,6);
         }
     }
 
@@ -837,7 +886,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         Collections.sort(message_history, new Comparator<List<String>>() {
             @Override
             public int compare(List<String> o1, List<String> o2) {
-                return new Integer(o1.get(0)).compareTo(new Integer(o2.get(0)));
+                return new Long(o1.get(0)).compareTo(new Long(o2.get(0)));
             }
         });
 
@@ -859,6 +908,270 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         }
     }
 
+    // On startup, scan pending output folder (uniquemonotoneid_me.ext) and get the ids
+    // and keep the largest one + 1 in a variable
+    public void get_unique_pending_output_id () {
+        unique_output_id = 0;
+        for (File c: new File(dir_queued_output).listFiles()) {
+            if (!c.isDirectory()) {
+                String tokens[] = c.getName().split("_");  // UNIQUEID_ME.EXT
+                int contender = new Integer(tokens[0]).intValue();
+                Log.d("Boogie", "Found queued output " + c.getName());
+                if (contender > unique_output_id) {
+                    unique_output_id = contender;
+                }
+            }
+        }
+        unique_output_id += 1;
+    }
+
+    public void start_audio_handlers () {
+        myAudioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
+        myAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, myAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
+        myAudioRecorder = new MediaRecorder();
+        myMediaPlayer = new MediaPlayer();
+    }
+
+    public void start_message_handler_thread () {
+        message_handler = new Thread(new Runnable()
+        {
+            private long startMillis = System.currentTimeMillis();
+
+            private void resetTimer() {
+                this.startMillis = System.currentTimeMillis();
+            }
+
+            @Override
+            public void run()
+            {
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND );
+                while (!Thread.interrupted()) {
+                    processQueuedOutput();
+                    processOutput();
+                    getPresence();
+                    if ((System.currentTimeMillis() - this.startMillis) > 200) {
+                        resetTimer();
+                        getNextMessage();
+                        update_message_history();
+                    }
+                }
+            }
+
+            private void processQueuedOutput () {
+                // Scan dir_current_output to see if it is empty
+                File dir = new File(dir_current_output);
+                File[] files = dir.listFiles();
+                // No internal directories expected & no self/parent directories
+                if ((files != null) && (files.length > 0)) {
+                    return;
+                }
+
+                // Scan dir_queued_output and find the lowest unique_id
+                File min_queued_id = null;
+                int min_id = unique_output_id; // Max possible (with a slight irrelevant race condition)
+                String min_rest_of_filename = null;
+                for (File c: new File(dir_queued_output).listFiles()) {
+                    if (!c.isDirectory()) {
+                        String tokens[] = c.getName().split("_");  // UNIQUEID_USERNAME.EXT
+                        int contender = new Integer(tokens[0]).intValue();
+                        if (contender < min_id) {
+                            min_id = contender;
+                            min_rest_of_filename = tokens[1];
+                            min_queued_id = c;
+                        }
+                    }
+                }
+
+                if (min_queued_id != null) {
+                    // Log the filename for testing (with and without wifi enabled to test queuing
+                    Log.d("Boogie", "About to send message: " + min_queued_id.getName() + " as " + password + "_" + min_rest_of_filename + " to output directory.");
+
+                    // Rename the file to password_username.ext in dir_current_output
+                    min_queued_id.renameTo(new File(dir_current_output + password + "_" + min_rest_of_filename));
+                }
+            }
+
+            private void processOutput() {
+                File dir = new File(dir_current_output);
+                File[] files = dir.listFiles();
+                // No internal directories
+                if ((files == null) || (files.length == 0)) {
+                    return;
+                }
+
+                String filename = files[0].getName();
+
+                String url = "http://" + backendServer + ":8080/upload";
+
+                String lineEnd = "\r\n";
+                String twoHyphens = "--";
+                String boundary = "*****";
+
+                int bytesRead, bytesAvailable, bufferSize;
+                byte[] buffer;
+                int maxBufferSize = 1024 * 1024;
+
+                try {
+                    URL server = new URL(url);
+                    FileInputStream fileInputStream = new FileInputStream(files[0]);
+                    DataOutputStream dos = null;
+                    HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
+                    ec2.setRequestMethod("POST");
+                    ec2.setRequestProperty("Content-Type", "multipart/form-data;boundary=" + boundary);
+                    ec2.setDoOutput(true);
+                    ec2.setDoInput(true);
+
+                    dos = new DataOutputStream(ec2.getOutputStream());
+                    dos.writeBytes(twoHyphens + boundary + lineEnd);
+                    dos.writeBytes("Content-Disposition: form-data; name=\"myFile\";filename=\""+ filename + "\"" + lineEnd);
+                    dos.writeBytes(lineEnd);
+
+                    // create a buffer of  maximum size
+                    bytesAvailable = fileInputStream.available();
+                    bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                    buffer = new byte[bufferSize];
+
+                    // read file and write it into form...
+                    bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+
+                    while (bytesRead > 0) {
+                        dos.write(buffer, 0, bufferSize);
+                        bytesAvailable = fileInputStream.available();
+                        bufferSize = Math.min(bytesAvailable, maxBufferSize);
+                        bytesRead = fileInputStream.read(buffer, 0, bufferSize);
+                    }
+
+                    // send multipart form data necesssary after file data...
+                    dos.writeBytes(lineEnd);
+                    dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+
+                    // Responses from the server (code and message)
+                    int serverResponseCode = ec2.getResponseCode();
+                    String serverResponseMessage = ec2.getResponseMessage();
+
+                    Log.i("Boogie", "HTTP Response is : "
+                            + serverResponseMessage + ": " + serverResponseCode);
+
+                    //close the streams //
+                    fileInputStream.close();
+                    dos.flush();
+                    dos.close();
+
+                    if (serverResponseCode == HttpURLConnection.HTTP_OK) {
+                        Log.d("Boogie", "Deleting file " + files[0].getName() + " from output directory.");
+                        files[0].delete();
+                    }
+                } catch (Exception e) {
+                    Log.d("Boogie", "Exception during message upload to backend", e);
+                    e.printStackTrace();
+                }
+            }
+
+            private String readStream(InputStream in) {
+                BufferedReader reader = null;
+                StringBuffer response = new StringBuffer();
+                try {
+                    reader = new BufferedReader(new InputStreamReader(in));
+                    String line = "";
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                return response.toString();
+            }
+
+            private void getPresence() {
+                String url = "http://" + backendServer + ":8080/presence/?user=" + username + "&password=" + password;
+                try {
+                    URL server = new URL(url);
+                    HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
+                    String server_response = null;
+                    if (ec2.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                        server_response = readStream(ec2.getInputStream());
+                        if (server_response.equals("0")) {
+                            setPresenceState(0);
+                        } else if (server_response.equals("1")) {
+                            setPresenceState(1);
+                        } else if (server_response.equals("2")) {
+                            setPresenceState(2);
+                        } else if (server_response.equals("3")) {
+                            setPresenceState(3);
+                        }
+                        return;
+                    }
+                    setPresenceState(0);
+                    return;
+                } catch (Exception e) {
+                    Log.d("Boogie", "Exception during presence polling", e);
+                }
+            }
+
+
+            private void copyInputStreamToFile( InputStream in, File file ) {
+                try {
+                    OutputStream out = new FileOutputStream(file);
+                    byte[] buf = new byte[1024];
+                    int len;
+                    while((len=in.read(buf))>0){
+                        out.write(buf,0,len);
+                    }
+                    out.close();
+                    in.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            private void getRemoteFile (String remoteName) {
+                String url = "http://" + backendServer + ":8080/download/?user=" + username + "&password=" + password + "&fname=" + remoteName;
+                try {
+                    URL server = new URL(url);
+                    HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
+                    ec2.setRequestMethod("GET");
+                    ec2.setDoInput(true);
+                    ec2.setDoOutput(true);
+                    ec2.connect();
+                    if (ec2.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                        String tokens[] = remoteName.split("_");
+                        copyInputStreamToFile(ec2.getInputStream(), new File(dir_messages + tokens[0] + "_unread_" + tokens[1]));
+                        Log.d("Boogie", "Brought in " + remoteName);
+                    }
+                } catch (Exception e) {
+                    Log.d("Boogie", "Exception during mail retrieval", e);
+                }
+            }
+
+            private void getNextMessage () {
+                String url = "http://" + backendServer + ":8080/check_mailbox/?user=" + username + "&password=" + password;
+                try {
+                    URL server = new URL(url);
+                    HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
+                    String server_response = null;
+                    if (ec2.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                        server_response = readStream(ec2.getInputStream());
+                        if (!server_response.equals("empty")) {
+                            getRemoteFile(server_response);
+                        }
+                    }
+                } catch (Exception e) {
+                    Log.d("Boogie", "Exception during mailbox check", e);
+                }
+            }
+        });
+
+        message_handler.start();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -872,13 +1185,17 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         reset_ui_state();
         setup_app_containers();
 
-        test_update_message_history("0_unread_sushant.3gp");
-        test_update_message_history("1_read_sushant.3gp");
-        test_update_message_history("2_unread_sudha.3gp");
-        test_update_message_history("3_unread_mani.3gp");
-        test_update_message_history("4_read_sushant.3gp");
+//        test_update_message_history("0_unread_sushant.3gp");
+//        test_update_message_history("1_read_sushant.3gp");
+//        test_update_message_history("2_unread_sudha.3gp");
+//        test_update_message_history("3_unread_mani.3gp");
+//        test_update_message_history("4_read_sushant.3gp");
 
         update_message_history();
+        get_unique_pending_output_id();
+        start_audio_handlers();
+
+        start_message_handler_thread();
     }
 
     @Override
@@ -895,8 +1212,201 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);}
     }
 
+    // Must hold system lock to call this function
+    public void showMessage (int index) {
+        if ((index + 1) <= message_history.size()) {
+            String msgpath = message_history.get(index).get(4);
+            String extension = message_history.get(index).get(3);
+            if (extension.equals("3gp")) {
+                try {
+                    myMediaPlayer.setDataSource(msgpath);
+                    myMediaPlayer.prepare();
+                    myMediaPlayer.start();
+                    playbackStarted = true;
+                } catch (IOException e) {
+                    Log.d("Boogie", "Playback failure");
+                    e.printStackTrace();
+                    playbackStarted = false;
+                }
+            } else if (extension.equals("txt")) {
+                Toast.makeText(getApplicationContext(), "Unhandled", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+    }
+
+    // Must hold system lock to call this function
+    public void cleanupMessage (int index) {
+        if ((index + 1) <= message_history.size()) {
+            String timestamp = message_history.get(index).get(0);
+            String readstate = message_history.get(index).get(1);
+            String source = message_history.get(index).get(2);
+            String extension = message_history.get(index).get(3);
+            String msgpath = message_history.get(index).get(4);
+            if (extension.equals("3gp")) {
+                if (playbackStarted) {
+                    try {
+                        myMediaPlayer.stop();
+                    } catch (RuntimeException e) {
+                        Log.d("Boogie", "RuntimeException at playback stop.");
+                        e.printStackTrace();
+                    }
+                }
+                myMediaPlayer.reset();
+                playbackStarted = false;
+            } else if (extension.equals("txt")) {
+                Toast.makeText(getApplicationContext(), "Unhandled", Toast.LENGTH_SHORT).show();
+            }
+
+            if (readstate.equals("unread")) {
+                new File(msgpath).renameTo(new File(dir_messages + timestamp + "_read_" + source + "." + extension));
+            }
+        }
+    }
+
     @Override
     public boolean onTouch(View view, MotionEvent event){
-        return true;
+        switch(event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                // BUTTON PRESSED
+                action_button.setClickable(false);
+                if (view.getId()==R.id.action_button) {
+                    set_action_state(true);
+                    if (userID != 2) {
+                        // Starting recording audio to temporary folder dir_ongoing_output
+                        try {
+                            String currentRecordingName = username + ".3gp";
+                            myAudioRecorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+                            myAudioRecorder.setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP);
+                            myAudioRecorder.setAudioEncoder(MediaRecorder.OutputFormat.AMR_NB);
+                            myAudioRecorder.setOutputFile(dir_ongoing_output + currentRecordingName);
+                            myAudioRecorder.prepare();
+                            myAudioRecorder.start();
+                        } catch (IllegalStateException e) {
+                            Log.d("Boogie", "IllegalStateException in Audio Recording.");
+                            e.printStackTrace();
+                        } catch (IOException e) {
+                            Log.d("Boogie", "IOException in Audio Recording.");
+                            e.printStackTrace();
+                        }
+                    }
+                } else {
+                    switch (view.getId()) {
+                        case R.id.sudha_high:
+                        case R.id.sushant_high:
+                        case R.id.mani_high:
+                            highMessagePressed = get_system_lock();
+                            if (highMessagePressed) {
+                                showMessage(0);
+                            }
+                            break;
+                        case R.id.sudha_highmid:
+                        case R.id.sushant_highmid:
+                        case R.id.mani_highmid:
+                            highmidMessagePressed = get_system_lock();
+                            if (highmidMessagePressed) {
+                                showMessage(1);
+                            }
+                            break;
+                        case R.id.sudha_mid:
+                        case R.id.sushant_mid:
+                        case R.id.mani_mid:
+                            midMessagePressed = get_system_lock();
+                            if (midMessagePressed) {
+                                showMessage(2);
+                            }
+                            break;
+                        case R.id.sudha_lowmid:
+                        case R.id.sushant_lowmid:
+                        case R.id.mani_lowmid:
+                            lowmidMessagePressed = get_system_lock();
+                            if (lowmidMessagePressed) {
+                                showMessage(3);
+                            }
+                            break;
+                        case R.id.sudha_low:
+                        case R.id.sushant_low:
+                        case R.id.mani_low:
+                            lowMessagePressed = get_system_lock();
+                            if (lowMessagePressed) {
+                                showMessage(4);
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                return true;
+            case MotionEvent.ACTION_UP:
+                // BUTTON RELEASED
+                if (view.getId()==R.id.action_button) {
+                    if (userID != 2) {
+                        try {
+                            myAudioRecorder.stop();
+                            File source = new File(dir_ongoing_output + username + ".3gp");
+                            File dest = new File(dir_queued_output + unique_output_id + "_" + username + ".3gp");
+                            source.renameTo(dest);
+                            unique_output_id += 1;
+                        } catch (RuntimeException e) {
+                            Log.d("Boogie", "RuntimeException due to lack of audio in rapid click.");
+                        }
+                        myAudioRecorder.reset();
+                    }
+                    set_action_state(false);
+                } else {
+                    switch (view.getId()) {
+                        case R.id.sudha_high:
+                        case R.id.sushant_high:
+                        case R.id.mani_high:
+                            if (highMessagePressed) {
+                                cleanupMessage(0);
+                                release_system_lock();
+                                highMessagePressed = false;
+                            }
+                            break;
+                        case R.id.sudha_highmid:
+                        case R.id.sushant_highmid:
+                        case R.id.mani_highmid:
+                            if (highmidMessagePressed) {
+                                cleanupMessage(1);
+                                release_system_lock();
+                                highmidMessagePressed = false;
+                            }
+                            break;
+                        case R.id.sudha_mid:
+                        case R.id.sushant_mid:
+                        case R.id.mani_mid:
+                            if (midMessagePressed) {
+                                cleanupMessage(2);
+                                release_system_lock();
+                                midMessagePressed = false;
+                            }
+                            break;
+                        case R.id.sudha_lowmid:
+                        case R.id.sushant_lowmid:
+                        case R.id.mani_lowmid:
+                            if (lowmidMessagePressed) {
+                                cleanupMessage(3);
+                                release_system_lock();
+                                lowmidMessagePressed = false;
+                            }
+                            break;
+                        case R.id.sudha_low:
+                        case R.id.sushant_low:
+                        case R.id.mani_low:
+                            if (lowMessagePressed) {
+                                cleanupMessage(4);
+                                release_system_lock();
+                                lowMessagePressed = false;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                action_button.setClickable(true);
+                return true;
+        }
+        return false;
     }
 }
