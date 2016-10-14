@@ -1,5 +1,6 @@
 package sssundar.revb.boogie;
 
+import android.graphics.Color;
 import android.view.View;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -61,6 +62,11 @@ public class DrawingView extends View {
     protected void onDraw(Canvas canvas) {
         canvas.drawBitmap(canvasBitmap, 0, 0, canvasPaint);
         canvas.drawPath(drawPath, drawPaint);
+    }
+
+    public void setCanvasBitmap (Bitmap b) {
+        canvasBitmap = b;
+        drawCanvas = new Canvas(b);
     }
 
     @Override

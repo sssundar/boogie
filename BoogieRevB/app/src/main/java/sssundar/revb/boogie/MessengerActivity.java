@@ -2,12 +2,14 @@ package sssundar.revb.boogie;
 
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Process;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -16,18 +18,24 @@ import android.widget.ImageButton;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -37,14 +45,16 @@ import java.util.List;
  */
 public class MessengerActivity extends Activity implements View.OnTouchListener {
 
-    // Credentials
+    // Credentials & Configuration
     // 0 = sushant, password0
     // 1 = sudha, password1
     // 2 = mani, password2
-    public static final int userID = 0;
-    public static final String password = "password0";
-    public static final String username = "sushant";
+    public static final int userID = 1;
+    public static final String password = "password1";
+    public static final String username = "sudha";
     public static final String backendServer = "ec2-54-183-116-184.us-west-1.compute.amazonaws.com";
+    public static final int N = 200;    // Screen Share Downsampled Pixel Width
+    public static final int N2 = N*N;   // Number of pixels total in downsampled images
 
     // Views & Buttons
     public DrawingView drawView;
@@ -72,6 +82,14 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     private boolean lowmidMessagePressed;
     private boolean lowMessagePressed;
     private boolean playbackStarted;
+    private boolean highMessageGotDrawingLock;
+    private boolean highmidMessageGotDrawingLock;
+    private boolean midMessageGotDrawingLock;
+    private boolean lowmidMessageGotDrawingLock;
+    private boolean lowMessageGotDrawingLock;
+    private boolean actionButtonGotDrawingLock;
+    public volatile boolean drawing_view_bitmap_is_being_accessed = false;
+    public int[] pendingScreenPixels;
 
     // Audio Handling (Recording, Playback)
     private MediaRecorder myAudioRecorder = null;
@@ -79,7 +97,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     private AudioManager myAudioManager = null;
 
     // Threads
-    public Thread message_handler;
+    public Thread message_handler, screen_sharer;
 
     public void getUIObjects () {
         drawView = (DrawingView) findViewById(R.id.doodler);
@@ -744,7 +762,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     }
 
     // Once given access (true return value) you must reset the state yourself
-    // using release_system_lock();
+    // using release_system_lock(); This lock is for message access.
     public synchronized boolean get_system_lock () {
         if (message_history_is_being_accessed) {
             return false;
@@ -758,6 +776,22 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         message_history_is_being_accessed = false;
     }
 
+    // Once given access (true return value) you must reset the state yourself
+    // using release_drawing_lock(); This lock is for screenshare access and
+    // is only respected by MY threads. DrawingView will ignore it.
+    public synchronized boolean get_drawing_lock () {
+        if (drawing_view_bitmap_is_being_accessed) {
+            return false;
+        } else {
+            drawing_view_bitmap_is_being_accessed = true;
+            return true;
+        }
+    }
+
+    public void release_drawing_lock () {
+        drawing_view_bitmap_is_being_accessed = false;
+    }
+
     public void disable_all_message_slots () {
         setLowMessage(6); // Blank
         setLowMidMessage(6); // Blank
@@ -767,18 +801,27 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     }
 
     // Must be called before other threads are activated, from the UI thread
+    // NOT thread safe.
     public void reset_ui_state () {
         drawView.allowDrawing(true); // Mani only; irrelevant for others.
         set_action_state(false);
         setPresenceState(0);
         disable_all_message_slots();
         message_history_is_being_accessed = false;
+        drawing_view_bitmap_is_being_accessed = false;
         highMessagePressed = false;
         highmidMessagePressed = false;
         midMessagePressed = false;
         lowmidMessagePressed = false;
         lowMessagePressed = false;
         playbackStarted = false;
+        highMessageGotDrawingLock = false;
+        highmidMessageGotDrawingLock = false;
+        midMessageGotDrawingLock = false;
+        lowmidMessageGotDrawingLock = false;
+        lowMessageGotDrawingLock = false;
+        actionButtonGotDrawingLock = false;
+        pendingScreenPixels = new int[N2];
     }
 
     public void setup_app_containers() {
@@ -805,13 +848,6 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
 
         // Clean up partial files from any aborted recordings
         for (File c : new File(dir_ongoing_output).listFiles()) {
-            if (!c.isDirectory()) {
-                c.delete();
-            }
-        }
-
-        // TODO Remove Clean up messages...
-        for (File c : new File(dir_messages).listFiles()) {
             if (!c.isDirectory()) {
                 c.delete();
             }
@@ -927,7 +963,6 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
 
     public void start_audio_handlers () {
         myAudioManager = (AudioManager) this.getSystemService(Context.AUDIO_SERVICE);
-        myAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, myAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
         myAudioRecorder = new MediaRecorder();
         myMediaPlayer = new MediaPlayer();
     }
@@ -1061,6 +1096,8 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         Log.d("Boogie", "Deleting file " + files[0].getName() + " from output directory.");
                         files[0].delete();
                     }
+                } catch (InterruptedIOException e) {
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     Log.d("Boogie", "Exception during message upload to backend", e);
                     e.printStackTrace();
@@ -1076,6 +1113,8 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     while ((line = reader.readLine()) != null) {
                         response.append(line);
                     }
+                } catch (InterruptedIOException e) {
+                    Thread.currentThread().interrupt();
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
@@ -1111,7 +1150,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     }
                     setPresenceState(0);
                     return;
+                } catch (InterruptedIOException e) {
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
+                    setPresenceState(0);
                     Log.d("Boogie", "Exception during presence polling", e);
                 }
             }
@@ -1127,6 +1169,8 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     }
                     out.close();
                     in.close();
+                } catch (InterruptedIOException e) {
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -1143,9 +1187,15 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     ec2.connect();
                     if (ec2.getResponseCode() == HttpURLConnection.HTTP_OK) {
                         String tokens[] = remoteName.split("_");
-                        copyInputStreamToFile(ec2.getInputStream(), new File(dir_messages + tokens[0] + "_unread_" + tokens[1]));
+                        if (tokens[1].split("\\.")[0].equals(username)) {
+                            copyInputStreamToFile(ec2.getInputStream(), new File(dir_messages + tokens[0] + "_read_" + tokens[1]));
+                        } else {
+                            copyInputStreamToFile(ec2.getInputStream(), new File(dir_messages + tokens[0] + "_unread_" + tokens[1]));
+                        }
                         Log.d("Boogie", "Brought in " + remoteName);
                     }
+                } catch (InterruptedIOException e) {
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     Log.d("Boogie", "Exception during mail retrieval", e);
                 }
@@ -1163,6 +1213,8 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                             getRemoteFile(server_response);
                         }
                     }
+                } catch (InterruptedIOException e) {
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     Log.d("Boogie", "Exception during mailbox check", e);
                 }
@@ -1171,6 +1223,200 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
 
         message_handler.start();
     }
+
+    public void start_screen_share_thread () {
+        screen_sharer = new Thread(new Runnable()
+        {
+
+            private int[] bmPixels = new int[N2];
+
+            @Override
+            public void run()
+            {
+                android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_DISPLAY);
+                while (!Thread.interrupted()) {
+                    if (drawView.canvasBitmap != null) {
+                        if (userID == 2) {
+                            sampleScreen();
+                        } else {
+                            setScreen();
+                        }
+                    }
+                }
+            }
+
+            private String readStream(InputStream in) {
+                BufferedReader reader = null;
+                StringBuffer response = new StringBuffer();
+                try {
+                    reader = new BufferedReader(new InputStreamReader(in));
+                    String line = "";
+                    while ((line = reader.readLine()) != null) {
+                        response.append(line);
+                    }
+                } catch (InterruptedIOException e) {
+                    Thread.currentThread().interrupt();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } finally {
+                    if (reader != null) {
+                        try {
+                            reader.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+                return response.toString();
+            }
+
+            private void setScreen () {
+                String url = "http://" + backendServer + ":8080/grabscreen/?user=" + username + "&password=" + password;
+                try {
+                    URL server = new URL(url);
+                    HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
+                    ec2.setReadTimeout(1000 /* milliseconds */);
+                    ec2.setConnectTimeout(1500 /* milliseconds */);
+                    ec2.setRequestMethod("GET");
+                    ec2.setRequestProperty("Content-Type", "text/plain; charset=UTF-8");
+                    ec2.setDoInput(true);
+                    ec2.connect();
+                    if (ec2.getResponseCode() == HttpURLConnection.HTTP_OK) {
+                        String contentAsString = readStream(ec2.getInputStream());
+                        List<String> runs = Arrays.asList(contentAsString.split(","));
+                        Bitmap toScale = Bitmap.createBitmap(N, N, Bitmap.Config.ARGB_8888);
+
+                        boolean firstFlag = true;
+                        int raw_color = 0xFF000000; // black 0xFF FFFFFF, white 0xFF 000000.
+                        int pxInd = 0;
+
+                        for (String s : runs) {
+                            if (firstFlag) {
+                                if (s.equalsIgnoreCase("b")) {
+                                    raw_color = 0xFF000000;
+                                } else {
+                                    raw_color = 0xFFFFFFFF;
+                                }
+                                firstFlag = false;
+                                continue;
+                            }
+
+                            int run = Integer.parseInt(s);
+
+                            for (int k = 0; k < run; k++) {
+                                bmPixels[pxInd] = raw_color;
+                                pxInd += 1;
+                            }
+
+                            if (raw_color == 0xFF000000) {
+                                raw_color = 0xFFFFFFFF;
+                            } else {
+                                raw_color = 0xFF000000;
+                            }
+
+                            if (pxInd == N2) {
+                                break;
+                            }
+                        }
+
+                        toScale.setPixels(bmPixels, 0, N, 0, 0, N, N);
+                        int dVheight = drawView.canvasBitmap.getHeight();
+                        int dVwidth = drawView.canvasBitmap.getWidth();
+                        if (get_drawing_lock()) {
+                            drawView.setCanvasBitmap(Bitmap.createScaledBitmap(toScale, dVwidth, dVheight, false));
+                            release_drawing_lock();
+                            MessengerActivity.this.runOnUiThread(new Runnable() {
+                                public void run() {
+                                    drawView.invalidate();
+                                }
+                            });
+                        }
+                    }
+                } catch (InterruptedIOException e) {
+                    Thread.currentThread().interrupt();
+                } catch (Exception e) {
+                    Log.d("Boogie", "Exception in SetScreen.", e);
+                }
+            }
+
+            private void sampleScreen() {
+                // Make an immutable copy of the Drawing View bitmap, resized to NxN.
+                if (get_drawing_lock()) {
+                    Bitmap scaled = Bitmap.createScaledBitmap(drawView.canvasBitmap, N, N, false);
+                    release_drawing_lock();
+                    scaled.getPixels(bmPixels, 0, N, 0, 0, N, N);
+
+                    // Compute the run length encoding and generate the post JSON data string
+                    ArrayList<String> rle = new ArrayList<String>();
+
+                    boolean firstFlag = true;
+                    int raw_color = 0xFF000000;
+                    int count = 0;
+
+                    for (int i = 0; i < N2; i++) {
+                        if (firstFlag) {
+                            firstFlag = false;
+                            if (bmPixels[i] == 0xFF000000) {
+                                rle.add("b");
+                            } else {
+                                rle.add("w");
+                            }
+                            raw_color = bmPixels[i];
+                            count = 0;
+                        }
+
+                        if (bmPixels[i] != raw_color) {
+                            rle.add(String.valueOf(count));
+                            raw_color = bmPixels[i];
+                            count = 0;
+                        }
+
+                        count += 1;
+                    }
+
+                    rle.add(String.valueOf(count));
+                    String csdata = TextUtils.join(",", rle);
+
+                    // HTTP post this string to the Amazon EC2 webserver associated with this app
+                    String url = "http://" + backendServer + ":8080/sharescreen";
+                    try {
+                        URL server = new URL(url);
+                        HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
+                        ec2.setDoOutput(true);
+                        ec2.setDoInput(true);
+                        ec2.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                        ec2.setRequestProperty("Accept", "application/json");
+                        ec2.setChunkedStreamingMode(0);
+
+                        ec2.setRequestMethod("POST");
+                        JSONObject data = new JSONObject();
+                        data.put("run_length_encoding", csdata);
+                        data.put("user", username);
+                        data.put("password", password);
+                        byte[] dat = data.toString().getBytes("UTF-8");
+                        ec2.setRequestProperty("Content-Length", String.valueOf(dat.length));
+
+                        OutputStream ostream = ec2.getOutputStream();
+                        ostream.write(dat);
+                        ostream.close();
+
+                        int HttpResult = ec2.getResponseCode();
+                        if (HttpResult != HttpURLConnection.HTTP_OK) {
+                            Log.d("Boogie", "RLE POST Failed with Response Code: " + String.valueOf(HttpResult));
+                        }
+                        ec2.disconnect();
+                    } catch (InterruptedIOException e) {
+                        Thread.currentThread().interrupt();
+                    } catch (Exception e) {
+                        Log.d("Boogie", "Exception during screen sampling", e);
+                    }
+                }
+            }
+        });
+
+        screen_sharer.start();
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -1181,6 +1427,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     @Override
     protected void onResume() {
         super.onResume();
+        Log.d("BoogieThread", "Resuming");
         getUIObjects();
         reset_ui_state();
         setup_app_containers();
@@ -1196,6 +1443,36 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         start_audio_handlers();
 
         start_message_handler_thread();
+        start_screen_share_thread();
+    }
+
+    private void stop_audio_handlers() {
+        myAudioRecorder.reset();
+        myAudioRecorder.release();
+        myMediaPlayer.reset();
+        myMediaPlayer.release();
+        myAudioRecorder = null;
+        myMediaPlayer = null;
+        myAudioManager = null;
+    }
+
+    private void stop_message_handler_thread() {
+        message_handler.interrupt();
+        message_handler = null;
+    }
+
+    private void stop_screen_share_thread() {
+        screen_sharer.interrupt();
+        screen_sharer = null;
+    }
+
+    @Override
+    protected void onPause() {
+        Log.d("BoogieThread", "Pausing");
+        super.onPause();
+        stop_audio_handlers();
+        stop_message_handler_thread();
+        stop_screen_share_thread();
     }
 
     @Override
@@ -1212,12 +1489,78 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                             | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);}
     }
 
+    public String readEncoding (File encoding) throws FileNotFoundException, IOException {
+        int length = (int) encoding.length();
+
+        byte[] bytes = new byte[length];
+
+        FileInputStream in = new FileInputStream(encoding);
+        try {
+            in.read(bytes);
+        } finally {
+            in.close();
+        }
+
+        return new String(bytes);
+    }
+
+    // Must hold display lock before calling this function
+    public void displayScreenMessage (String rleEncodedScreen) {
+        try {
+            String contentAsString = readEncoding(new File(rleEncodedScreen));
+            List<String> runs = Arrays.asList(contentAsString.split(","));
+            Bitmap toScale = Bitmap.createBitmap(N, N, Bitmap.Config.ARGB_8888);
+            boolean firstFlag = true;
+            int raw_color = 0xFF000000; // black 0xFF FFFFFF, white 0xFF 000000.
+            int pxInd = 0;
+
+            for (String s : runs) {
+                if (firstFlag) {
+                    if (s.equalsIgnoreCase("b")) {
+                        raw_color = 0xFF000000;
+                    } else {
+                        raw_color = 0xFFFFFFFF;
+                    }
+                    firstFlag = false;
+                    continue;
+                }
+
+                int run = Integer.parseInt(s);
+
+                for (int k = 0; k < run; k++) {
+                    pendingScreenPixels[pxInd] = raw_color;
+                    pxInd += 1;
+                }
+
+                if (raw_color == 0xFF000000) {
+                    raw_color = 0xFFFFFFFF;
+                } else {
+                    raw_color = 0xFF000000;
+                }
+
+                if (pxInd == N2) {
+                    break;
+                }
+            }
+
+            toScale.setPixels(pendingScreenPixels, 0, N, 0, 0, N, N);
+            int dVheight = drawView.canvasBitmap.getHeight();
+            int dVwidth = drawView.canvasBitmap.getWidth();
+            drawView.setCanvasBitmap(Bitmap.createScaledBitmap(toScale, dVwidth, dVheight, false));
+            drawView.invalidate();
+        } catch (Exception e) {
+            Log.d("Boogie", "Error in screen playback decoding, " + e.toString());
+        }
+    }
+
     // Must hold system lock to call this function
     public void showMessage (int index) {
         if ((index + 1) <= message_history.size()) {
             String msgpath = message_history.get(index).get(4);
             String extension = message_history.get(index).get(3);
             if (extension.equals("3gp")) {
+                myAudioManager.setStreamMute(AudioManager.STREAM_MUSIC, false);
+                myAudioManager.setStreamVolume(AudioManager.STREAM_MUSIC, myAudioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC), 0);
                 try {
                     myMediaPlayer.setDataSource(msgpath);
                     myMediaPlayer.prepare();
@@ -1229,8 +1572,40 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     playbackStarted = false;
                 }
             } else if (extension.equals("txt")) {
-                Toast.makeText(getApplicationContext(), "Unhandled", Toast.LENGTH_SHORT).show();
-                return;
+                // We already know only one button got here, because of the system lock.
+                // Here, if we're Mani, drawing, we are competing with a slow POST request that
+                // doesn't lock the system very often for drawing. For Amma and Sushant, we are
+                // competing with a drawing lock by the screen setter that happens VERY fast,
+                // so we often see lockouts. To this end, we introduce a while loop, and we have
+                // tested that press-releases happen in order (i.e. all in same thread).
+                boolean lock_flag = false;
+                while (!lock_flag) {
+                    lock_flag = get_drawing_lock();
+                }
+
+                switch (index) {
+                    case 0:
+                        highMessageGotDrawingLock = lock_flag;
+                        break;
+                    case 1:
+                        highmidMessageGotDrawingLock = lock_flag;
+                        break;
+                    case 2:
+                        midMessageGotDrawingLock = lock_flag;
+                        break;
+                    case 3:
+                        lowmidMessageGotDrawingLock = lock_flag;
+                        break;
+                    case 4:
+                        lowMessageGotDrawingLock = lock_flag;
+                        break;
+                    default:
+                        Log.d("Boogie", "Invalid index at screen share message display handler.");
+                        release_drawing_lock();
+                        return;
+                }
+                drawView.allowDrawing(false);
+                displayScreenMessage(msgpath);
             }
         }
     }
@@ -1255,12 +1630,101 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                 myMediaPlayer.reset();
                 playbackStarted = false;
             } else if (extension.equals("txt")) {
-                Toast.makeText(getApplicationContext(), "Unhandled", Toast.LENGTH_SHORT).show();
+                Log.d("Boogie", "Got to cleanup already!");
+                boolean gotDrawingLock = false;
+                switch (index) {
+                    case 0:
+                        gotDrawingLock = highMessageGotDrawingLock;
+                        highMessageGotDrawingLock = false;
+                        break;
+                    case 1:
+                        gotDrawingLock = highmidMessageGotDrawingLock;
+                        highmidMessageGotDrawingLock = false;
+                        break;
+                    case 2:
+                        gotDrawingLock = midMessageGotDrawingLock;
+                        midMessageGotDrawingLock = false;
+                        break;
+                    case 3:
+                        gotDrawingLock = lowmidMessageGotDrawingLock;
+                        lowmidMessageGotDrawingLock = false;
+                        break;
+                    case 4:
+                        gotDrawingLock = lowMessageGotDrawingLock;
+                        lowMessageGotDrawingLock = false;
+                        break;
+                    default:
+                        return;
+                }
+                if (gotDrawingLock) {
+                    drawView.allowDrawing(true);
+                    drawView.wipeScreen();
+                    release_drawing_lock();
+                }
             }
 
             if (readstate.equals("unread")) {
                 new File(msgpath).renameTo(new File(dir_messages + timestamp + "_read_" + source + "." + extension));
             }
+        }
+    }
+
+    private void writeScreenMessageLocally (String data, Context context) {
+        try {
+            FileOutputStream stream = new FileOutputStream(new File(dir_ongoing_output + username + ".txt"));
+            stream.write(data.getBytes());
+            stream.close();
+        } catch (Exception e) {
+            Log.e("Boogie", "File write failed: " + e.toString());
+        }
+    }
+
+    // You must have the drawing lock to call this
+    public void encodeScreenMessage () {
+        // Make an immutable copy of the Drawing View bitmap, resized to NxN.
+        Bitmap scaled = Bitmap.createScaledBitmap(drawView.canvasBitmap, N, N, false);
+        drawView.wipeScreen();
+
+        scaled.getPixels(pendingScreenPixels, 0, N, 0, 0, N, N);
+
+        // Compute the run length encoding and generate the post JSON data string
+        ArrayList<String> rle = new ArrayList<String>();
+
+        boolean firstFlag = true;
+        int raw_color = 0xFF000000;
+        int count = 0;
+
+        for (int i = 0; i < N2; i++) {
+            if (firstFlag) {
+                firstFlag = false;
+                if (pendingScreenPixels[i] == 0xFF000000) {
+                    rle.add("b");
+                } else {
+                    rle.add("w");
+                }
+                raw_color = pendingScreenPixels[i];
+                count = 0;
+            }
+
+            if (pendingScreenPixels[i] != raw_color) {
+                rle.add(String.valueOf(count));
+                raw_color = pendingScreenPixels[i];
+                count = 0;
+            }
+
+            count += 1;
+        }
+        release_drawing_lock();
+        rle.add(String.valueOf(count));
+        String csdata = TextUtils.join(",", rle);
+        writeScreenMessageLocally(csdata, getApplicationContext());
+        try {
+            File source = new File(dir_ongoing_output + username + ".txt");
+            File dest = new File(dir_queued_output + unique_output_id + "_" + username + ".txt");
+            source.renameTo(dest);
+            unique_output_id += 1;
+        } catch (Exception e) {
+            Log.d("Boogie", "Unable to write text-encoded screen view message to queued output, " + e.toString());
         }
     }
 
@@ -1289,12 +1753,18 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                             Log.d("Boogie", "IOException in Audio Recording.");
                             e.printStackTrace();
                         }
+                    } else {
+                        actionButtonGotDrawingLock = get_drawing_lock();
+                        if (actionButtonGotDrawingLock) {
+                            encodeScreenMessage();
+                        }
                     }
                 } else {
                     switch (view.getId()) {
                         case R.id.sudha_high:
                         case R.id.sushant_high:
                         case R.id.mani_high:
+                            Log.d("Boogie", "High Pressed");
                             highMessagePressed = get_system_lock();
                             if (highMessagePressed) {
                                 showMessage(0);
@@ -1303,6 +1773,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         case R.id.sudha_highmid:
                         case R.id.sushant_highmid:
                         case R.id.mani_highmid:
+                            Log.d("Boogie", "High Mid Pressed");
                             highmidMessagePressed = get_system_lock();
                             if (highmidMessagePressed) {
                                 showMessage(1);
@@ -1311,6 +1782,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         case R.id.sudha_mid:
                         case R.id.sushant_mid:
                         case R.id.mani_mid:
+                            Log.d("Boogie", "Mid Pressed");
                             midMessagePressed = get_system_lock();
                             if (midMessagePressed) {
                                 showMessage(2);
@@ -1319,6 +1791,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         case R.id.sudha_lowmid:
                         case R.id.sushant_lowmid:
                         case R.id.mani_lowmid:
+                            Log.d("Boogie", "Low Mid Pressed");
                             lowmidMessagePressed = get_system_lock();
                             if (lowmidMessagePressed) {
                                 showMessage(3);
@@ -1327,6 +1800,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         case R.id.sudha_low:
                         case R.id.sushant_low:
                         case R.id.mani_low:
+                            Log.d("Boogie", "Low Pressed");
                             lowMessagePressed = get_system_lock();
                             if (lowMessagePressed) {
                                 showMessage(4);
