@@ -6,6 +6,8 @@ import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaRecorder;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Process;
@@ -33,6 +35,7 @@ import java.io.InterruptedIOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,9 +52,9 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     // 0 = sushant, password0
     // 1 = sudha, password1
     // 2 = mani, password2
-    public static final int userID = 1;
-    public static final String password = "password1";
-    public static final String username = "sudha";
+    public static final int userID = 0;
+    public static final String password = "password0";
+    public static final String username = "sushant";
     public static final String backendServer = "ec2-54-183-116-184.us-west-1.compute.amazonaws.com";
     public static final int N = 200;    // Screen Share Downsampled Pixel Width
     public static final int N2 = N*N;   // Number of pixels total in downsampled images
@@ -971,6 +974,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         message_handler = new Thread(new Runnable()
         {
             private long startMillis = System.currentTimeMillis();
+            private ConnectivityManager cm = null;
 
             private void resetTimer() {
                 this.startMillis = System.currentTimeMillis();
@@ -980,16 +984,26 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
             public void run()
             {
                 android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND );
+                cm = (ConnectivityManager) getBaseContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
                 while (!Thread.interrupted()) {
-                    processQueuedOutput();
-                    processOutput();
-                    getPresence();
                     if ((System.currentTimeMillis() - this.startMillis) > 200) {
                         resetTimer();
-                        getNextMessage();
-                        update_message_history();
+                        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                        boolean isConnected = (activeNetwork != null) && activeNetwork.isConnected() && (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI);
+                        if (isConnected) {
+                            processQueuedOutput();
+                            processOutput();
+                            getPresence();
+                            getNextMessage();
+                            update_message_history();
+                        } else {
+                            setPresenceState(0);
+                        }
                     }
                 }
+
+                Log.d("BoogieThread", "Message interrupted.");
             }
 
             private void processQueuedOutput () {
@@ -1096,7 +1110,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         Log.d("Boogie", "Deleting file " + files[0].getName() + " from output directory.");
                         files[0].delete();
                     }
+                } catch (SocketTimeoutException e) {
+                    Log.d("Boogie", "SocketTimeout", e);
                 } catch (InterruptedIOException e) {
+                    Log.d("Boogie", "InterruptedIOException during message upload to backend", e);
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     Log.d("Boogie", "Exception during message upload to backend", e);
@@ -1113,7 +1130,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     while ((line = reader.readLine()) != null) {
                         response.append(line);
                     }
+                } catch (SocketTimeoutException e) {
+                    Log.d("Boogie", "SocketTimeout", e);
                 } catch (InterruptedIOException e) {
+                    Log.d("Boogie", "InterruptedIOException during readStream in Messenger", e);
                     Thread.currentThread().interrupt();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -1150,7 +1170,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     }
                     setPresenceState(0);
                     return;
+                } catch (SocketTimeoutException e) {
+                    Log.d("Boogie", "SocketTimeout", e);
                 } catch (InterruptedIOException e) {
+                    Log.d("Boogie", "InterruptedIOException during Presence in Messenger", e);
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     setPresenceState(0);
@@ -1169,7 +1192,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     }
                     out.close();
                     in.close();
+                } catch (SocketTimeoutException e) {
+                    Log.d("Boogie", "SocketTimeout", e);
                 } catch (InterruptedIOException e) {
+                    Log.d("Boogie", "InterruptedIOException during copyInputStreamToFile in Messenger", e);
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -1194,7 +1220,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         }
                         Log.d("Boogie", "Brought in " + remoteName);
                     }
+                } catch (SocketTimeoutException e) {
+                    Log.d("Boogie", "SocketTimeout", e);
                 } catch (InterruptedIOException e) {
+                    Log.d("Boogie", "InterruptedIOException during getRemoteFile in Messenger", e);
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     Log.d("Boogie", "Exception during mail retrieval", e);
@@ -1213,7 +1242,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                             getRemoteFile(server_response);
                         }
                     }
+                } catch (SocketTimeoutException e) {
+                    Log.d("Boogie", "SocketTimeout", e);
                 } catch (InterruptedIOException e) {
+                    Log.d("Boogie", "InterruptedIOException during getNextMessage in Messenger", e);
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     Log.d("Boogie", "Exception during mailbox check", e);
@@ -1227,22 +1259,38 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     public void start_screen_share_thread () {
         screen_sharer = new Thread(new Runnable()
         {
-
+            private long startSSMillis = System.currentTimeMillis();
             private int[] bmPixels = new int[N2];
+            private ConnectivityManager cm = null;
+
+            private void resetTimer() {
+                this.startSSMillis = System.currentTimeMillis();
+            }
 
             @Override
             public void run()
             {
                 android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_DISPLAY);
+                cm = (ConnectivityManager) getBaseContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
                 while (!Thread.interrupted()) {
-                    if (drawView.canvasBitmap != null) {
-                        if (userID == 2) {
-                            sampleScreen();
-                        } else {
-                            setScreen();
+                    if ((System.currentTimeMillis() - this.startSSMillis) > 200) {
+                        resetTimer();
+
+                        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+                        boolean isConnected = (activeNetwork != null) && activeNetwork.isConnected() && (activeNetwork.getType() == ConnectivityManager.TYPE_WIFI);
+
+                        if ((drawView.canvasBitmap != null) && isConnected) {
+                            if (userID == 2) {
+                                sampleScreen();
+                            } else {
+                                setScreen();
+                            }
                         }
                     }
                 }
+
+                Log.d("BoogieThread", "Screen interrupted.");
             }
 
             private String readStream(InputStream in) {
@@ -1254,7 +1302,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                     while ((line = reader.readLine()) != null) {
                         response.append(line);
                     }
+                } catch (SocketTimeoutException e) {
+                    Log.d("Boogie", "SocketTimeout", e);
                 } catch (InterruptedIOException e) {
+                    Log.d("Boogie", "InterruptedIOException during readStream in Screen", e);
                     Thread.currentThread().interrupt();
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -1332,7 +1383,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                             });
                         }
                     }
+                } catch (SocketTimeoutException e) {
+                    Log.d("Boogie", "SocketTimeout", e);
                 } catch (InterruptedIOException e) {
+                    Log.d("Boogie", "InterruptedIOException during setScreen in Screen", e);
                     Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     Log.d("Boogie", "Exception in SetScreen.", e);
@@ -1405,7 +1459,10 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                             Log.d("Boogie", "RLE POST Failed with Response Code: " + String.valueOf(HttpResult));
                         }
                         ec2.disconnect();
+                    } catch (SocketTimeoutException e) {
+                        Log.d("Boogie", "SocketTimeout", e);
                     } catch (InterruptedIOException e) {
+                        Log.d("Boogie", "InterruptedIOException during shareScreen in Screen", e);
                         Thread.currentThread().interrupt();
                     } catch (Exception e) {
                         Log.d("Boogie", "Exception during screen sampling", e);
@@ -1416,7 +1473,6 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
 
         screen_sharer.start();
     }
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -1457,12 +1513,16 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     }
 
     private void stop_message_handler_thread() {
-        message_handler.interrupt();
+        while (!message_handler.isInterrupted()) {
+            message_handler.interrupt();
+        }
         message_handler = null;
     }
 
     private void stop_screen_share_thread() {
-        screen_sharer.interrupt();
+        while (!screen_sharer.isInterrupted()) {
+            screen_sharer.interrupt();
+        }
         screen_sharer = null;
     }
 

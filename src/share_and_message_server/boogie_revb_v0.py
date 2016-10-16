@@ -76,7 +76,7 @@ def validate_extensions (name):
 
 def update_presence(ping_flag, index_to_clear):		
 	time_now = time.time()			
-	seconds_elapsed = int(time_now - BoogieBackend.zero_time)
+	seconds_elapsed = float(time_now - BoogieBackend.zero_time)
 	BoogieBackend.zero_time = time_now;
 
 	BoogieBackend.ACTIVE_USERS = [x + seconds_elapsed for x in BoogieBackend.ACTIVE_USERS]
@@ -160,10 +160,10 @@ if __name__ == '__main__':
 	setup_message_state()
 
 	# Locally, for testing
-	cherrypy.config.update( {'server.socket_host': '127.0.0.1', 'server.socket_port': 8080} )      	
+	# cherrypy.config.update( {'server.socket_host': '127.0.0.1', 'server.socket_port': 8080} )      	
 
 	# Remotely, for release
-	# cherrypy.config.update( {'server.socket_host': '0.0.0.0', 'server.socket_port': 8080} )   
+	cherrypy.config.update( {'server.socket_host': '0.0.0.0', 'server.socket_port': 8080} )   
 	
 	cherrypy.quickstart(BoogieBackend())
 

@@ -51,6 +51,8 @@ Yes! Good.
 ssh -i test_voip.pem ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com
 scp -i test_voip.pem ~/Documents/boogie/src/voice_share_server/voice_share_server.py ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~
 
+scp -i test_voip.pem ~/Documents/boogie/src/share_and_message_server/boogie_revb_v0.py ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~
+
 ps aux | grep -e python
 top.. k .. PID
 
