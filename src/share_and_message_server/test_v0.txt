@@ -61,3 +61,13 @@ curl -o test.3gp ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/downloa
 curl -X GET ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/check_mailbox
 
 Works!
+
+#################################33
+Test boogie_revb_testhd.py
+
+scp -i test_voip.pem ~/Documents/boogie/src/share_and_message_server/boogie_revb_testhd.py ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~
+ssh -i test_voip.pem ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com
+curl -X POST -F "myFile=@/home/sush/Documents/boogie/src/share_and_message_server/test.jpeg" ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/upload
+
+http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080 (index) should show what's been uploaded
+

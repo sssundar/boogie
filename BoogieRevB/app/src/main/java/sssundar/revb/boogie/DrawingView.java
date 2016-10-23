@@ -19,19 +19,12 @@ public class DrawingView extends View {
 
     private int paintColor = 0xFF000000; // black
 
-    private int userID;
-
     private Canvas drawCanvas;
     public volatile Bitmap canvasBitmap;
-    public volatile boolean isDrawingAllowed = false;
 
     public DrawingView(Context context, AttributeSet attrs){
         super(context, attrs);
         setupDrawing();
-    }
-
-    public void allowDrawing(boolean enable) {
-        isDrawingAllowed = enable && (userID == 2);
     }
 
     private void setupDrawing(){
@@ -47,8 +40,6 @@ public class DrawingView extends View {
         drawPaint.setStrokeCap(Paint.Cap.ROUND);
 
         canvasPaint = new Paint(Paint.DITHER_FLAG);
-
-        userID = MessengerActivity.userID;
     }
 
     @Override
@@ -64,41 +55,28 @@ public class DrawingView extends View {
         canvas.drawPath(drawPath, drawPaint);
     }
 
-    public void setCanvasBitmap (Bitmap b) {
-        canvasBitmap = b;
-        drawCanvas = new Canvas(b);
-    }
-
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        if (isDrawingAllowed) {
-            float touchX = event.getX();
-            float touchY = event.getY();
+        float touchX = event.getX();
+        float touchY = event.getY();
 
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    drawPath.moveTo(touchX, touchY);
-                    drawCanvas.drawCircle(touchX, touchY, 2, drawPaint);
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    drawPath.lineTo(touchX, touchY);
-                    break;
-                case MotionEvent.ACTION_UP:
-                    drawCanvas.drawPath(drawPath, drawPaint);
-                    drawPath.reset();
-                    break;
-                default:
-                    return false;
-            }
-
-            invalidate();
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                drawPath.moveTo(touchX, touchY);
+                drawCanvas.drawCircle(touchX, touchY, 2, drawPaint);
+                break;
+            case MotionEvent.ACTION_MOVE:
+                drawPath.lineTo(touchX, touchY);
+                break;
+            case MotionEvent.ACTION_UP:
+                drawCanvas.drawPath(drawPath, drawPaint);
+                drawPath.reset();
+                break;
+            default:
+                return false;
         }
+
+        invalidate();
         return true;
     }
-
-    public void wipeScreen(){
-        drawCanvas.drawColor(0, PorterDuff.Mode.CLEAR);
-        invalidate();
-    }
-
 }

@@ -7,8 +7,8 @@ import cherrypy
 local_dir = os.path.dirname(__file__)
 abs_dir = os.path.join(os.getcwd(), local_dir)
 
-SCREENSHARE_PATH = './public/images/hd_screenshare.jpeg'
-STATIC_PATH = '/static/images/hd_screenshare.jpeg'
+SCREENSHARE_PATH = './public/images/hd_screenshare.png'
+STATIC_PATH = '/static/images/hd_screenshare.png'
 
 class BoogieBackend(object):		
 	@cherrypy.expose
