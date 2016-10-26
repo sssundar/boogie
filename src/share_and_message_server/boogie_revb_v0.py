@@ -1,18 +1,17 @@
 # Screen Sharing & Drawing/Voice Messaging CherryPy HTTP Server for Boogie-RevB
-# Last Revised by Sushant Sundaresh on 2016-10-14
+# Last Revised by Sushant Sundaresh on 2016-10-23
 
 import glob, os, string, time, shutil
 import cherrypy
 from cherrypy.lib.static import serve_file
 
-# Hard Coded Image Size Required (pixel width)
-N = 200 # pixels
-MAX_PIXELS = N**2
-MAX_TIME_TRACKED = 5 # seconds
+MAX_TIME_TRACKED = 2 # seconds
 
 local_dir = os.path.dirname(__file__)
 abs_dir = os.path.join(os.getcwd(), local_dir)
-temp_storage = ""
+temp_storage = os.path.join(abs_dir, "temp_storage")	
+ss_filename = "sharescreen.png"
+ss_filepath = os.path.join(temp_storage, ss_filename)
 
 # ==TODO== Always clear to silly data before committing to Github. 
 # For Presence Logging, Authentication for GET/POST
@@ -21,19 +20,19 @@ USERS = {	'sushant':[0,'password0',"",[]],
 			'sudha':[1,'password1',"",[]],
 			'mani':[2,'password2',"",[]] }
 
-# Files in here must have .txt or .3gp extensions
+# Files in here must have .png or .3gp extensions
 # Files in here must be named systemtimeinms_usersource.extension
 def setup_storage_paths ():
+	global temp_storage, ss_filename, ss_filepath
 	# Setup User Message Remote Storage Directories
 	for user in USERS.keys():
 		storagePath = os.path.join(abs_dir, "%s_messages" % user)
 		if not os.path.exists(storagePath):
 			os.makedirs(storagePath)	
 		USERS[user][2] = storagePath
-	# Setup Temporary Write Storage
-	temp_storage = os.path.join(abs_dir, "temp_storage")	
+	# Setup Temporary Write Storage	
 	if not os.path.exists(temp_storage):
-			os.makedirs(temp_storage)	
+		os.makedirs(temp_storage)	
 
 def setup_message_state ():
 	# Check each user's message history (remote) and add it to their messageArray 
@@ -44,19 +43,6 @@ def setup_message_state ():
 			temp = f.split("_")			
 			files.append([int(temp[0]), f]) # time in ms, timestamp_user.extension
 		USERS[user][3] = [x[1] for x in sorted(files,key=lambda x: x[0])]
-
-# Takes a text string intended for RLE decoding and sanity checks it.
-# If the pixel size (init color, run, run, run, ...) adds up to N**2,
-# saves the encoding as a string in a local variable and returns True
-# Otherwise returns False and doesn't change the text string. 
-def rle_decode (rle_string):
-	if len(rle_string) > 0:
-		pixel_count = sum([int(x) for x in rle_string.split(",")[1::]])
-		if pixel_count != MAX_PIXELS:			
-			return False					
-		BoogieBackend.latest_screen_rle = rle_string
-		return True	
-	return False	
 
 def authenticate(user, password):
 	if user in USERS.keys():
@@ -72,7 +58,7 @@ def authenticate_by_filename (name):
 
 def validate_extensions (name):
 	extension = name.split(".")[-1]
-	return extension in ["3gp", "txt"]
+	return extension in ["3gp", "png"]
 
 def update_presence(ping_flag, index_to_clear):		
 	time_now = time.time()			
@@ -86,10 +72,7 @@ def update_presence(ping_flag, index_to_clear):
 		BoogieBackend.ACTIVE_USERS[index_to_clear] = 0
 
 class BoogieBackend(object):
-	
-	# Run Length Encoding of Latest Screen Share
-	latest_screen_rle = "w,%d" % MAX_PIXELS # initially
-
+		
 	# Seconds since last presence ping
 	# Initially no one is present (all MAX_TIME_TRACKED seconds past a ping)	
 	ACTIVE_USERS = [MAX_TIME_TRACKED, MAX_TIME_TRACKED, MAX_TIME_TRACKED] 
@@ -139,21 +122,17 @@ class BoogieBackend(object):
 					cherrypy.request.hooks.attach('on_end_request', self.cleanup_served_file)
 					USERS[user][3].pop(0)
 					return serve_file(os.path.join(USERS[user][2], fname))
-
-	# Expects a JSON input with key 'run_length_encoding'	
-	# Expects a JSON input with key 'user', and key 'password'.	
-	@cherrypy.tools.json_in() 
+	
 	@cherrypy.expose()       
-	def sharescreen(self):					
-		user = cherrypy.request.json['user']
-		password = cherrypy.request.json['password']				
-		if authenticate(user, password):		
-			rle_decode(cherrypy.request.json['run_length_encoding'])	
+	def sharescreen(self, myFile):			
+		if authenticate_by_filename(myFile.filename):			
+			with open(ss_filepath, 'wb') as f:
+				f.write(myFile.file.read())			
 
 	@cherrypy.expose()
 	def grabscreen(self, user="", password=""):
 		if authenticate(user,password):
-			return BoogieBackend.latest_screen_rle
+			return serve_file(ss_filepath)
 
 if __name__ == '__main__':
 	setup_storage_paths()
