@@ -18,16 +18,16 @@ Grandfather doodles, we record voice messages
 Credentials baked in for everyone to keep UI dead simple  
 Numeric indicator of internet connectivity & online users  
 Two-button UI  
- First button is to record audio (us) & save-screen (grandfather)  
- Second button is to playback screen shares and audio  
+: First button is to record audio (us) & save-screen (grandfather)  
+: Second button is to playback screen shares and audio  
 High Priority Thread  
- Smoothly screen shares at perfectly legible resolution between US and India on a 56kbps connection, updating stably between 1-2 Hz   
+: Smoothly screen shares at perfectly legible resolution between US and India on a 56kbps connection, updating stably between 1-2 Hz   
 Low Priority Thread  
- Naive presence polling  
- Mailbox check, message downloading, and local message management  
+: Naive presence polling  
+: Mailbox check, message downloading, and local message management  
 UI Thread  
- Drawable doodle area  
- Synchronization framework for the drawable area between all three threads  
+: Drawable doodle area  
+: Synchronization framework for the drawable area between all three threads  
 Backend CherryPy HTTP server on an Amazon EC2 instance handles simple authentication and message distribution  
 
 Limitations --  
