@@ -1,2 +1,2 @@
-# boogie
-Android app to screen share simple doodles alongside a VoIP call
+# Boogie
+## Revision B.1 (23 October 2016)
