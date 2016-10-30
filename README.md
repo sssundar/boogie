@@ -25,9 +25,9 @@ Two-button UI
 : First button type records audio (us) & saves-and-clears-screen (grandfather)  
 : Second button type plays back screen shares and audio  
 High Priority Thread  
-: Smoothly screen shares at perfectly legible resolution between US and India on a 56kbps connection
-: My grandfather's build sends data only on new draw events
-: The receivers (us) have builds that poll at a continuous 1-2 Hz   
+: Smoothly screen shares at perfectly legible resolution between US and India on a 56kbps connection  
+: My grandfather's build sends data only on new draw events  
+: The receivers (us) have builds that poll at a continuous 1-2 Hz  
 Low Priority Thread  
 : Naive presence polling  
 : Mailbox check, message downloading, and local message management  
