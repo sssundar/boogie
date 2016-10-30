@@ -18,7 +18,8 @@ Hardware --
 The grandfather-facing end of this project required about $200 of equipment. We are using a Nexus 7 (2013) running Marshmallow, a pair of decent over-ear headphones (to accomodate hearing aids), and a few soft tipped capacitive styluses. My mother and I are running Marshmallow on Google and Huawei smartphones. notebook_rev_a/ has the details, but the specifics really don't matter.
 
 What's happening inside --  
-Grandfather doodles and receives voice messages, and we record voice messages and receive doodles
+Grandfather doodles and receives voice messages  
+We record voice messages and receive doodles  
 Credentials are baked in for everyone to keep UI dead simple  
 Numeric indicator of internet connectivity & online users  
 Two-button UI  
@@ -49,7 +50,7 @@ The most current source is in BoogieRevB/ (app) and src/share_and_message_server
 Documentation --  
 For the beta, no technical documentation, but a very clear user guide. Stability was the real target; the basic functionality was well in hand by the alpha. My notes from the alpha release (which was not successful) include timing measurements from India to the US, and, if you're interested, various attempts at a SIP based VoIP feature using FreePBX and Asterix on the backend.
 
-Feature Wish List -- 
+Feature Wish List --  
 Redesign the backend + app screen-share thread to use a socket.io like framework  
 Redesign the app itself for modern authentication  
 Auto-update via Google Play  (costs about $60/year + a $25 developer fee, one-time)  
