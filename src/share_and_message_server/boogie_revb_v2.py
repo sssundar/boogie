@@ -11,9 +11,10 @@ local_dir = os.path.dirname(__file__)
 abs_dir = os.path.join(os.getcwd(), local_dir)
 temp_storage_dir_name = "temp_storage"
 temp_storage = os.path.join(abs_dir, temp_storage_dir_name)	
-ss_filename = "sharescreen.png"
+ss_filename = "FAKEFILENAME.png" # TODO Change this to a fake value so static files are a little harder to see.
 ss_filepath = os.path.join(temp_storage, ss_filename)
 STATIC_PATH = '/static/' + ss_filename
+STATIC_URI = 'http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/static/' + ss_filename # TODO Change port number
 
 # ==TODO== Always clear to silly data before committing to Github. 
 # For Presence Logging, Authentication for GET/POST
@@ -90,8 +91,31 @@ class BoogieBackend(object):
 	@cherrypy.expose
 	def index(self, user="",password=""):			
 		if authenticate_guest(user,password):
-			toshare = """<img src=\"""" + STATIC_PATH + """\">""" if os.path.isfile(ss_filepath) else """<body> Nothing to see here! </body>"""
-			index = """<html> <meta http-equiv="refresh" content="0.2">""" + toshare + """ </html>"""
+			if os.path.isfile(ss_filepath):
+				index = ""
+				index += '<html>'
+				index += '<head>'
+				index += '<script type="text/JavaScript">'
+				index += 'var imageURI = "' + STATIC_URI + '";'
+				index += 'var img = new Image();'
+				index += 'img.onload = function() {'
+				index += '    var canvas = document.getElementById("x");'				
+				index += '    var context = canvas.getContext("2d");'
+				index += ' 	  context.clearRect(0, 0, 1024, 1024);'
+				index += '    context.drawImage(img, 0, 0);'
+				index += '    setTimeout(timedRefresh,200);'
+				index += '};'
+				index += 'function timedRefresh() {'
+				index += "    img.src = imageURI + '?d=' + Date.now();"
+				index += '}'
+				index += '</script>'
+				index += '</head>'
+				index += '<body onload="JavaScript:timedRefresh();">'
+				index += '<canvas id="x" width="1024" height="1024" />'
+				index += '</body>'
+				index += '</html>'			
+			else:
+				index = "Nothing to see here, yet."
 		else:
 			index = "You have invalid credentials."
 		return index		
@@ -158,7 +182,10 @@ if __name__ == '__main__':
 		},
 		'/static': {
 			'tools.staticdir.on': True,
-			'tools.staticdir.dir': './' + temp_storage_dir_name
+			'tools.staticdir.dir': './' + temp_storage_dir_name,
+			'tools.caching.on': False,
+			'tools.expires.on' : True,
+  			'tools.expires.secs' : 0
 		}
 	}		
 

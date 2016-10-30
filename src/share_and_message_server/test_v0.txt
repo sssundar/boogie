@@ -67,3 +67,18 @@ ssh -i test_voip.pem ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com
 scp -i test_voip.pem ~/Documents/boogie/src/share_and_message_server/boogie_revb_v2.py ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~
 
 http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/?user=guest&password=password3
+
+Currently, works GREAT with one user, no flicker, clears screen. 
+
+Issues:
+	Multiple users of the same url cause one of them to eventually get booted.
+Non-issues:
+	User has to zoom (min-viable-product, who cares)
+
+ToDo
+	Commit with fake filename, fake passwords, with bug reported in commit.
+	Get it working for multiple users at once (guest)
+	Upgrade server and run a clean instance on the right 8080 port, with the right filename
+	Test with Balu mama and me viewing simultaneously + all of me, amma, and thatha on the call. Test for lag.
+	Then Boogie is shareable to ANYONE - and Patti can send it out herself. But for now, just send it to close family (Suman) with instructions.
+	Update documentation and close this out for a while.
