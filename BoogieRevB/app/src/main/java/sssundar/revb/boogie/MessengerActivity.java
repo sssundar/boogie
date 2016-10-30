@@ -39,10 +39,13 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Formatter;
 import java.util.List;
 
 /**
@@ -1255,6 +1258,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
         {
             private long startSSMillis = System.currentTimeMillis();            
             private ConnectivityManager cm = null;
+            private String oldhash = null;
 
             private void resetTimer() {
                 this.startSSMillis = System.currentTimeMillis();
@@ -1265,6 +1269,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
             {
                 android.os.Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_DISPLAY);
                 cm = (ConnectivityManager) getBaseContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+                oldhash = null;
 
                 while (!Thread.interrupted()) {
                     if ((System.currentTimeMillis() - this.startSSMillis) > 200) {
@@ -1320,6 +1325,14 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                 }
             }
 
+            private String byteArray2Hex (final byte[] hash) {
+                Formatter formatter = new Formatter();
+                for (byte b : hash) {
+                    formatter.format("%02x",b);
+                }
+                return formatter.toString();
+            }
+
             private void sampleScreen() {
                 // Make an immutable copy of the Drawing View bitmap, resized to NxN.
                 int h = drawView.canvasBitmap.getHeight();
@@ -1328,15 +1341,47 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                 if (get_drawing_lock()) {
                     Bitmap scaled = Bitmap.createScaledBitmap(drawView.canvasBitmap, N, nh, true);
                     release_drawing_lock();
+                    byte[] imageByte = null;
+                    try {
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        scaled.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        imageByte = stream.toByteArray();
+                        stream.close();
+                    } catch (InterruptedIOException e) {
+                        Log.d("Boogie", "InterruptedIOException during screenshare to backend", e);
+                        imageByte = null;
+                        Thread.currentThread().interrupt();
+                    } catch (Exception e) {
+                        Log.d("Boogie", "Exception during screenshare hash", e);
+                        imageByte = null;
+                    }
+
+                    if (imageByte == null) {
+                        return;
+                    }
+
+                    String hash = null;
+                    try {
+                        MessageDigest md = MessageDigest.getInstance("SHA-1");
+                        hash = byteArray2Hex(md.digest(imageByte));
+                        if ((oldhash == null) || ((oldhash != null) && !hash.equals(oldhash)) ) {
+                            oldhash = hash;
+                            hash = null;
+                        }
+                    } catch (NoSuchAlgorithmException e) {
+                        Log.d("Boogie", "Hash in sampleScreen failed", e);
+                        hash = null;
+                    }
+
+                    if (hash != null) {
+                        return;
+                    }
+
                     String url = "http://" + backendServer + ":8080/sharescreen";
                     String lineEnd = "\r\n";
                     String twoHyphens = "--";
                     String boundary = "*****";
                     try {
-                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        scaled.compress(Bitmap.CompressFormat.PNG, 100, stream);
-                        byte[] imageByte = stream.toByteArray();
-                        stream.close();
                         URL server = new URL(url);
                         HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
                         ec2.setRequestMethod("POST");
@@ -1362,7 +1407,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         Log.d("Boogie", "InterruptedIOException during screenshare to backend", e);
                         Thread.currentThread().interrupt();
                     } catch (Exception e) {
-                        Log.d("Boogie", "Exception during screenshare to backend", e);                        
+                        Log.d("Boogie", "Exception during screenshare to backend", e);
                     }
                 }
             }

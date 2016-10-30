@@ -71,22 +71,25 @@ http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/?user=guest&passw
 Currently, works GREAT with one user, no flicker, clears screen. 
 
 ToDo
-	Commit with fake filename, fake passwords, with bug reported in commit.
-
-	Need to hash/send hash with samplescreen, and if hash hasn't changed, have server reject setscreen? well, let that be for now.
-	Test this.
-
+	Commit with fake filename, fake passwords, with bug reported in commit.	
 	Work on auto-upgrade as well if you can - only need it to work for Thatha.
-
-	Upgrade server and run a clean instance on the right 8080 port, with the right filename
-
-	Release it and test it...
-		Test with Balu mama and me viewing simultaneously + all of me, amma, and thatha on the call. Test for lag.
 	
-	Then Boogie is shareable to ANYONE - and Patti can send it out herself. But for now, just send it to close family (Suman) with instructions. 
+	Wipe server to new instance. Set it up following your guide. 
+	Upgrade server and run a clean instance on the right 8080 port, with the right filename
+		Use the right passwords and PORT
+		Make text guide: zoom, clear cache, CLOSE AFTER DONE, for safari (mac) and chrome (windows)
+	Build all the packages with updated server public DNS. save to google drive.	
+		Use the right passwords, and DNS, and PORT
+	Test with me as Thatha, with Amma as Amma, and Appa and I on the browser.
+	Put myself as me 
+	Walk Patti through an auto-upgrade (hereafter) uninstall/reinstall (might need to fix her email issues)
+	Make sure they have the guide printed
+	Make sure Balu mama is aware of the browser option now (email) and email suman, vikram, and Amma/Appa/me as well just in case.	
 	
 	Update documentation and close this out for a while.
 		Socket.io is a must in a future revision. The current one is not privacy concerned + very inefficient on the client side.
-		Known issues with bandwidth usage on receiver side (after fix)
+		Known issues with bandwidth usage on receiver side 
+			Source side has been fixed
 		Known issues with cache on receiver side (guest)
-			Make a separate Guide to say "how to clear cache - phone/laptop : safari/chrome."
+			Doesn't appear to matter in short term (5-10 minutes)
+			
