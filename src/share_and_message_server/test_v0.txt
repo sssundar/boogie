@@ -61,3 +61,9 @@ curl -o test.3gp ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/downloa
 curl -X GET ec2-54-183-116-184.us-west-1.compute.amazonaws.com:8080/check_mailbox
 
 Works!
+
+-- Testing Guest Access --
+ssh -i test_voip.pem ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com
+scp -i test_voip.pem ~/Documents/boogie/src/share_and_message_server/boogie_revb_v2.py ubuntu@ec2-54-183-116-184.us-west-1.compute.amazonaws.com:~
+
+http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/?user=guest&password=password3
