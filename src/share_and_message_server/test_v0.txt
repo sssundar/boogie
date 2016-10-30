@@ -70,15 +70,18 @@ http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/?user=guest&passw
 
 Currently, works GREAT with one user, no flicker, clears screen. 
 
-Issues:
-	Multiple users of the same url cause one of them to eventually get booted.
-Non-issues:
-	User has to zoom (min-viable-product, who cares)
-
 ToDo
 	Commit with fake filename, fake passwords, with bug reported in commit.
-	Get it working for multiple users at once (guest)
+	
+	Clear cache on client side - ridiculous now.. can use longer timeout.
+		Test with Amma phone, Appa phone, my phone as thatha, and laptop as balu.
+	Need to hash/send hash with samplescreen, and if hash hasn't changed, have server reject setscreen? well, let that be for now.
+	Test this thoroughly.
+	Work on auto-upgrade as well if you can.	
 	Upgrade server and run a clean instance on the right 8080 port, with the right filename
+	Release it and test it...
+
 	Test with Balu mama and me viewing simultaneously + all of me, amma, and thatha on the call. Test for lag.
-	Then Boogie is shareable to ANYONE - and Patti can send it out herself. But for now, just send it to close family (Suman) with instructions.
+	Then Boogie is shareable to ANYONE - and Patti can send it out herself. But for now, just send it to close family (Suman) with instructions. 
 	Update documentation and close this out for a while.
+		Socket.io is a must in a future revision. The current one is not privacy concerned + very inefficient on the client side.

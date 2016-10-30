@@ -11,7 +11,7 @@ local_dir = os.path.dirname(__file__)
 abs_dir = os.path.join(os.getcwd(), local_dir)
 temp_storage_dir_name = "temp_storage"
 temp_storage = os.path.join(abs_dir, temp_storage_dir_name)	
-ss_filename = "FAKEFILENAME.png" # TODO Change this to a fake value so static files are a little harder to see.
+ss_filename = "FAKEIMAGE.png" # TODO Change this to a fake value so static files are a little harder to see.
 ss_filepath = os.path.join(temp_storage, ss_filename)
 STATIC_PATH = '/static/' + ss_filename
 STATIC_URI = 'http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/static/' + ss_filename # TODO Change port number
@@ -102,10 +102,10 @@ class BoogieBackend(object):
 				index += '    var canvas = document.getElementById("x");'				
 				index += '    var context = canvas.getContext("2d");'
 				index += ' 	  context.clearRect(0, 0, 1024, 1024);'
-				index += '    context.drawImage(img, 0, 0);'
-				index += '    setTimeout(timedRefresh,200);'
+				index += '    context.drawImage(img, 0, 0);'				
 				index += '};'
 				index += 'function timedRefresh() {'
+				index += '    setTimeout(timedRefresh,200);'
 				index += "    img.src = imageURI + '?d=' + Date.now();"
 				index += '}'
 				index += '</script>'
