@@ -11,10 +11,10 @@ local_dir = os.path.dirname(__file__)
 abs_dir = os.path.join(os.getcwd(), local_dir)
 temp_storage_dir_name = "temp_storage"
 temp_storage = os.path.join(abs_dir, temp_storage_dir_name)	
-ss_filename = "FAKE.png" # TODO Change this to a fake value so static files are a little harder to see.
+ss_filename = "TODO.png" # TODO Change this to a fake value so static files are a little harder to see.
 ss_filepath = os.path.join(temp_storage, ss_filename)
 STATIC_PATH = '/static/' + ss_filename
-STATIC_URI = 'http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/static/' + ss_filename # TODO Change port number
+STATIC_URI = 'http://TODO:TODO/static/' + ss_filename # TODO Change port number
 
 # ==TODO== Always clear to silly data before committing to Github. 
 # For Presence Logging, Authentication for GET/POST
@@ -110,8 +110,12 @@ class BoogieBackend(object):
 				index += '}'
 				index += '</script>'
 				index += '</head>'
+				index += 'When you are done with your conversation, please close this page. <br> <br>'
+				index += 'On your phone? Use your fingers to zoom you in and out. <br>'
+				index += 'On your Mac? "command +" zooms in and "command -" zooms out. <br>'
+				index += 'On your PC? "ctrl +" zooms in and "ctrl -" zooms out. <br> <br>'
 				index += '<body onload="JavaScript:timedRefresh();">'
-				index += '<canvas id="x" width="1024" height="1024" />'
+				index += '<canvas id="x" width="1024" height="1024" />'				
 				index += '</body>'
 				index += '</html>'			
 			else:
@@ -190,12 +194,12 @@ if __name__ == '__main__':
 	}		
 
 	# Locally, for testing
-	# cherrypy.config.update( {'server.socket_host': '127.0.0.1', 'server.socket_port': 8080} )      	
+	# cherrypy.config.update( {'server.socket_host': '127.0.0.1', 'server.socket_port': TODO} )      	
 
 	# Remotely, for testing
-	cherrypy.config.update( {'server.socket_host': '0.0.0.0', 'server.socket_port': 9080} )   
+	# cherrypy.config.update( {'server.socket_host': '0.0.0.0', 'server.socket_port': TODO} )   
 
 	# Remotely, for release
-	# cherrypy.config.update( {'server.socket_host': '0.0.0.0', 'server.socket_port': 8080} )   
+	cherrypy.config.update( {'server.socket_host': '0.0.0.0', 'server.socket_port': TODO} )   
 	
 	cherrypy.quickstart(BoogieBackend(), '/', conf)

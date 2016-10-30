@@ -58,10 +58,13 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
     // 1 = sudha, password1
     // 2 = mani, password2
     // TODO Comments in spacer_medium - 35 for thatha, 2 for us.
-    public static final int userID = 2;
-    public static final String password = "password2";
-    public static final String username = "mani";
-    public static final String backendServer = "ec2-54-183-116-184.us-west-1.compute.amazonaws.com";
+    // TODO Restore credentials
+    // TODO Restore domain name
+    // TODO Restore port
+    public static final int userID = -1;
+    public static final String password = "TODO";
+    public static final String username = "TODO";
+    public static final String backendServer = "TODO";
     public static final int N = 512;    // Screen Share Downsampled Pixel Width    
 
     // Views & Buttons
@@ -1047,7 +1050,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
 
                 String filename = files[0].getName();
 
-                String url = "http://" + backendServer + ":8080/upload";
+                String url = "http://" + backendServer + ":1234/upload";
 
                 String lineEnd = "\r\n";
                 String twoHyphens = "--";
@@ -1147,7 +1150,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
             }
 
             private void getPresence() {
-                String url = "http://" + backendServer + ":8080/presence/?user=" + username + "&password=" + password;
+                String url = "http://" + backendServer + ":1234/presence/?user=" + username + "&password=" + password;
                 try {
                     URL server = new URL(url);
                     HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
@@ -1200,7 +1203,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
             }
 
             private void getRemoteFile (String remoteName) {
-                String url = "http://" + backendServer + ":8080/download/?user=" + username + "&password=" + password + "&fname=" + remoteName;
+                String url = "http://" + backendServer + ":1234/download/?user=" + username + "&password=" + password + "&fname=" + remoteName;
                 try {
                     URL server = new URL(url);
                     HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
@@ -1228,7 +1231,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
             }
 
             private void getNextMessage () {
-                String url = "http://" + backendServer + ":8080/check_mailbox/?user=" + username + "&password=" + password;
+                String url = "http://" + backendServer + ":1234/check_mailbox/?user=" + username + "&password=" + password;
                 try {
                     URL server = new URL(url);
                     HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
@@ -1292,7 +1295,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
             }
 
             private void setScreen () {
-                String url = "http://" + backendServer + ":8080/grabscreen/?user=" + username + "&password=" + password;
+                String url = "http://" + backendServer + ":1234/grabscreen/?user=" + username + "&password=" + password;
                 try {
                     URL server = new URL(url);
                     HttpURLConnection ec2 = (HttpURLConnection) server.openConnection();
@@ -1377,7 +1380,7 @@ public class MessengerActivity extends Activity implements View.OnTouchListener 
                         return;
                     }
 
-                    String url = "http://" + backendServer + ":8080/sharescreen";
+                    String url = "http://" + backendServer + ":1234/sharescreen";
                     String lineEnd = "\r\n";
                     String twoHyphens = "--";
                     String boundary = "*****";
