@@ -50,6 +50,9 @@ The most current source is in BoogieRevB/ (app) and src/share_and_message_server
 Documentation --  
 For the beta, no technical documentation, but a very clear user guide. Stability was the real target; the basic functionality was well in hand by the alpha. My notes from the alpha release (which was not successful) include timing measurements from India to the US, and, if you're interested, various attempts at a SIP based VoIP feature using FreePBX and Asterix on the backend.
 
+Known Bugs --  
+Guest users do not yet update the presence stats. This should be a simple Javascript URI call on the client side refresh timeout.  
+
 Feature Wish List --  
 Redesign the backend + app screen-share thread to use a socket.io like framework  
 Redesign the app itself for modern authentication  
