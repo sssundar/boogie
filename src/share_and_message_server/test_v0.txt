@@ -69,27 +69,3 @@ scp -i test_voip.pem ~/Documents/boogie/src/share_and_message_server/boogie_revb
 http://ec2-54-183-116-184.us-west-1.compute.amazonaws.com:9080/?user=guest&password=password3
 
 Currently, works GREAT with one user, no flicker, clears screen. 
-
-
-
------------------------
-ToDo
-	Test with me as Thatha, with Amma as Amma, and Appa and I on the browser.
-	Put myself as me 	
-
-	Update documentation and close this out for a while.
-		Socket.io is a must in a future revision. The current one is not privacy concerned + very inefficient on the client side.
-		Known issues with bandwidth usage on receiver side 
-			Source side has been fixed
-		Known issues with cache on receiver side (guest)
-			Doesn't appear to matter in short term (5-10 minutes)
-		Autoupgrade via Google Play requires a GSuite ($60/yr) + Developer Account ($25). Let's wait on this.
-
-	Walk Patti through an auto-upgrade (hereafter) uninstall/reinstall (might need to fix her email issues)
-		Have her download it from the private channel!
-	Make sure they have the guide printed
-	Make sure Balu mama is aware of the browser option now (email) and email suman, vikram, and Amma/Appa/me as well just in case.	
-
-	This really is the end for Boogie vB.2 for the next few months. Move on.			
-
-	I want to be here by 3 PM.
